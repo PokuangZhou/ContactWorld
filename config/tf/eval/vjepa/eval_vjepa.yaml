@@ -1,0 +1,34 @@
+checkpoint: /home/pokuang/project/dogtac-code/outputs/world_model_tf/checkpoints/vjepa_0426_2seq_2/best-rollout-visual-l2.ckpt
+data_root: /home/pokuang/project/dogtac-code/high-level/data/saved_data/dogtac_dataset_20260422_213933.zarr
+encoder: vjepa
+image_size: 192
+frameskip: 1
+num_steps: 6
+batch_size: 64
+num_workers: 4
+train_ratio: 0.9
+split_seed: 3072
+eval_split: val
+max_batches:
+log_every_n_batches: 10
+
+action_mode: all
+# proprio_mode: use_ground_truth
+proprio_mode: predict_proprio
+
+vjepa_arch: vit_giant_rope
+vjepa_checkpoint: /home/pokuang/project/dogtac-code/high-level/world_model/data/vjepa_data/pretrained_model/vjepa2_1_vitg_384.pt
+vjepa_checkpoint_key: target_encoder
+vjepa_batchify_video: false
+vjepa_dup_image: false
+vjepa_normalize_reps: false
+
+predictor_embed_dim: 384
+predictor_depth: 6
+predictor_heads:
+predictor_mlp_ratio: 4.0
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.0
+rollout_ctxt_window: 2
+rollout_steps: 1

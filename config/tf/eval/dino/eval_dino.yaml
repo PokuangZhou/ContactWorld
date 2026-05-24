@@ -1,0 +1,40 @@
+checkpoint: /home/pokuang/project/ContactWorld/outputs/world_model_tf/checkpoints/dino_0427/best-rollout-visual-l2.ckpt
+data_root: /home/pokuang/project/ContactWorld/data/demo_data/insertion_usb
+encoder: dino
+vision_key: front
+vision_type: image
+dino_name: dinov3_vitl16
+dino_checkpoint: /home/pokuang/project/ContactWorld/data/pretrained_model/dino3/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
+dino_token_mode: patch
+dino_token_strategy: patch_only # patch_only | last4_avg | last4_concat_project
+dino_last_layers: 4
+
+image_size: 192
+frameskip: 1
+num_steps: 6
+batch_size: 64
+num_workers: 8
+train_ratio: 0.9
+split_seed: 3072
+eval_split: val
+max_batches:
+log_every_n_batches: 10
+
+action_mode: all
+proprio_mode: predict_proprio
+
+predictor_embed_dim: 384
+predictor_depth: 6
+predictor_heads:
+predictor_mlp_ratio: 4.0
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.0
+rollout_ctxt_window: 4
+rollout_steps: 2
+visual_l2_weight: 1.0
+visual_cos_weight: 0.0
+lowdim_l2_weight: 1.0
+lowdim_cos_weight: 0.0
+reg_loss_type: vc
+reg_weight: 1.0

@@ -1,0 +1,19 @@
+python eval_planner.py \
+  --data-root /home/zhiyuan/Project/TVB/data/screwing_valve \
+  --ckpt-path logs/ckpts/screwing_valve/front/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_valve \
+  --output-dir logs/planning/screwing_valve/100000/step_24/front \
+  --vision-key front \
+  --vision-type image \
+  --image-size 224 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 24 \
+  --max-steps 30 \
+  --stop-on-success

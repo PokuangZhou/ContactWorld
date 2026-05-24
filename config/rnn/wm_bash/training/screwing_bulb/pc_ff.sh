@@ -1,0 +1,16 @@
+python train.py \
+  --data-root ../data/bulb_0423_100 \
+  --task screwing_bulb \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --batch-size 64 \
+  --epochs 145

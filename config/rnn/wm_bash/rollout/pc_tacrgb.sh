@@ -1,0 +1,18 @@
+python eval_rollout.py \
+  --ckpt-path ckpts/pc_tacrgb/100000.ckpt \
+  --data-root /home/zhiyuan/Project/TVB/data/insertion_usb \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_rgb_right \
+  --tactile-in-channels 3 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only-for-concat \
+  --history-size 1 \
+  --max-rollout 6 \
+  --action-mode all \
+  --output-dir rollout/pc_tacrgb

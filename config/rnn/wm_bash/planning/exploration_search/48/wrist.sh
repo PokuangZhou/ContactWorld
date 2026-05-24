@@ -1,0 +1,19 @@
+python eval_planner.py \
+  --data-root /home/zhiyuan/Project/TVB/data/exploration_search \
+  --ckpt-path logs/ckpts/exploration_search/wrist/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_search \
+  --output-dir logs/planning/exploration_search/100000/step_48/wrist \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 48 \
+  --max-steps 60 \
+  --stop-on-success

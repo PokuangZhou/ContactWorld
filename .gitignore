@@ -1,0 +1,28 @@
+# Local data and pretrained checkpoints
+data/pretrained_model/
+data/demo_data/
+
+# Generated logs, caches, and experiment outputs
+logs/
+.cache/
+outputs/
+
+# Third-party repositories and SDKs
+thirdparty/
+
+# Python generated files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Local environment and editor files
+.env
+.env.*
+.DS_Store
+.vscode/
+.idea/

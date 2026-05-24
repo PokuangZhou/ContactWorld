@@ -1,0 +1,177 @@
+# ContactWorld
+
+**ContactWorld** is a benchmark and codebase for studying vision-tactile world
+models in contact-rich manipulation. It focuses on tasks such as insertion,
+disassembly, screwing, and exploratory contact, with tools for multimodal
+sequence learning and planner-in-the-loop evaluation.
+
+The current release builds on the ManiFeel / TacSL IsaacGym stack and adds
+Transformer world-model training and evaluation utilities.
+
+## Teaser
+
+![ContactWorld teaser](media/teaser.png)
+
+[PDF version](media/teaser.pdf)
+
+## Architecture
+
+![ContactWorld architecture](media/architecture.png)
+
+[PDF version](media/architecture.pdf)
+
+## Highlights
+
+- Vision-tactile world-model training on ManiFeel-style zarr datasets.
+- DINOv3 visual encoders with tactile and low-dimensional state prediction.
+- CEM-style planner evaluation inside IsaacGym contact-rich environments.
+- Local smoke-test scripts for checking installation, training, checkpoint
+  loading, and planner rollout.
+
+## Repository Layout
+
+```text
+ContactWorld/
+  config/                 # Training and evaluation YAML configs
+  data/
+    demo_data/            # Demo zarr datasets
+    pretrained_model/     # Local pretrained checkpoints, e.g. DINOv3
+    replace_part/         # Patch files applied to thirdparty ManiFeel repos
+  media/                  # Figures used in this README
+  scripts/
+    manifeel_codepatch/   # Install, data download, and thirdparty patch scripts
+    train_tf_test.sh      # Minimal training/sanity test
+    eval_planner_tf_test.sh
+  thirdparty/             # ManiFeel, IsaacGym, DINOv3, diffusion_policy, etc.
+  world_model_tf/         # ContactWorld Transformer world-model code
+```
+
+## Setup
+
+Install the ManiFeel/TacSL dependencies from the patch helper:
+
+```bash
+cd /home/pokuang/project/ContactWorld
+scripts/manifeel_codepatch/install.sh
+```
+
+After cloning or installing third-party repositories, apply the ContactWorld
+patches:
+
+```bash
+cd /home/pokuang/project/ContactWorld
+scripts/manifeel_codepatch/replace_code.sh
+```
+
+Activate the conda environment:
+
+```bash
+conda activate /home/pokuang/miniforge3/envs/cw
+export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}
+```
+
+## Required Local Assets
+
+The smoke-test scripts expect these paths by default:
+
+```text
+data/demo_data/insertion_usb
+data/pretrained_model/dino3/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
+thirdparty/dinov3
+thirdparty/manifeel
+thirdparty/manifeel-isaacgymenvs
+thirdparty/IsaacGym_Preview_TacSL_Package
+```
+
+## Quick Tests
+
+Run a training smoke test. By default this uses the full demo dataset but only
+runs Lightning's sanity-check path (`EPOCHS=0`):
+
+```bash
+cd /home/pokuang/project/ContactWorld
+scripts/train_tf_test.sh
+```
+
+Run one actual minimal training epoch:
+
+```bash
+EPOCHS=1 BATCH_SIZE=32 scripts/train_tf_test.sh
+```
+
+Run a minimal planner evaluation in IsaacGym:
+
+```bash
+scripts/eval_planner_tf_test.sh
+```
+
+The planner smoke test defaults to a very small setting:
+
+```text
+NUM_ENVS=2
+MAX_STEPS=1
+CANDIDATES=4
+TOPK=2
+ITERATIONS=1
+```
+
+## Training
+
+Main DINO front-RGB training config:
+
+```text
+config/tf/train/dino/train_dino_front_rgb.yaml
+```
+
+The test script forwards any extra arguments to `world_model_tf/train.py`, so
+you can override config values from the command line:
+
+```bash
+scripts/train_tf_test.sh \
+  --epochs 2 \
+  --batch-size 32 \
+  --train-num-workers 8 \
+  --val-num-workers 4
+```
+
+## Planner Evaluation
+
+Planner evaluation config:
+
+```text
+config/tf/eval/dino/eval_planner_env_dino_front_rgb_smoke.yaml
+```
+
+The test script forwards extra arguments to `world_model_tf/eval_planner_env.py`:
+
+```bash
+scripts/eval_planner_tf_test.sh \
+  --num-envs 4 \
+  --max-steps 3 \
+  --candidates 8 \
+  --candidate-chunk-size 8 \
+  --topk 2 \
+  --iterations 1
+```
+
+## Citation
+
+```bibtex
+@article{zhang2026contactworld,
+  title={ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation},
+  author={},
+  journal={},
+  year={2026}
+}
+```
+
+Related:
+
+```bibtex
+@article{luu2025manifeel,
+  title={ManiFeel: Benchmarking and Understanding Visuotactile Manipulation Policy Learning},
+  author={Luu, Quan Khanh and Zhou, Pokuang and Xu, Zhengtong and Zhang, Zhiyuan and Qiu, Qiang and She, Yu},
+  journal={arXiv preprint arXiv:2505.18472},
+  year={2025}
+}
+```

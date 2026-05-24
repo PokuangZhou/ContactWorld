@@ -1,0 +1,61 @@
+data_root: /home/pokuang/project/dogtac-code/high-level/data/saved_data/dogtac_dataset_20260429_150550.zarr
+encoder: vjepa
+exp_name: vjepa_flag100_0430_1
+image_size: 224 #192
+frameskip: 1
+num_steps: 6
+batch_size: 128 
+num_workers: 8
+train_num_workers: 8
+val_num_workers: 2
+pin_memory: true
+persistent_workers: true
+prefetch_factor: 2
+epochs: 100
+train_ratio: 0.9
+split_seed: 3072
+lr: 0.0001
+weight_decay: 0.0001
+save_dir: outputs/world_model_tf
+save_every_n_epochs: 30
+resume_from:
+early_stop_patience: 10
+early_stop_monitor: val/rollout_visual_l2
+early_stop_mode: min
+
+vjepa_arch: vit_giant_rope
+vjepa_checkpoint: /home/pokuang/project/dogtac-code/high-level/world_model/data/vjepa_data/pretrained_model/vjepa2_1_vitg_384.pt
+vjepa_checkpoint_key: target_encoder
+# vjepa_batchify_video: true #the entire time series will be fed into V-JEPA at once.
+# vjepa_dup_image: true #Duplicate the image along the time dimension.
+vjepa_batchify_video: false 
+vjepa_dup_image: false  
+vjepa_normalize_reps: false
+
+predictor_embed_dim: 384
+predictor_depth: 6
+predictor_heads:
+predictor_mlp_ratio: 4.0
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.0
+
+visual_l2_weight: 1.0
+visual_cos_weight: 0.0
+lowdim_l2_weight: 1.0
+lowdim_cos_weight: 0.0
+
+# rollout_ctxt_window: 4
+# rollout_steps:
+rollout_ctxt_window: 2
+rollout_steps: 1
+# val_proprio_rollout_mode: use_ground_truth
+val_proprio_rollout_mode: predict_proprio
+precision: bf16-mixed
+
+wandb: true
+wandb_project: world_model_tf_flag100
+wandb_entity:
+wandb_name:
+wandb_save_dir: outputs/wandb
+wandb_log_model: false
