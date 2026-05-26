@@ -1,12 +1,20 @@
-checkpoint: /home/pokuang/project/ContactWorld/outputs/world_model_tf/usb/front_rgb/checkpoints/usb/dinob_front_rgb_patch_vc/best-rollout-visual-l2.ckpt
+checkpoint: /home/pokuang/project/ContactWorld/outputs/world_model_tf/usb/pointcloud/checkpoints/usb/pc_pointcloud_vc/best-rollout-visual-l2.ckpt
 data_root: /home/pokuang/project/ContactWorld/data/demo_data/insertion_usb
 isaacgym_cfg_name: isaacgym_config_usb
-output_dir: /home/pokuang/project/ContactWorld/outputs/world_model_tf/planning/usb/front_rgb
+output_dir: /home/pokuang/project/ContactWorld/outputs/world_model_tf/planning/usb/pointcloud
 device: cuda
 
 encoder: dino
-vision_key: front
-vision_type: image
+vision_key: pointcloud
+vision_type: pc
+pc_in_channels: 6
+pc_raw_num_points: 1024
+pointcloud_scale: 0.4
+pc_tokenizer: none
+pc_num_points:
+pc_order_mode: xyz
+pc_voxel_grid: [16, 16, 1]
+pc_bounds: [-0.4, 0.8, -0.6, 0.6, -0.2, 0.8]
 image_size: 224
 frameskip: 1
 num_steps: 6
@@ -14,14 +22,10 @@ num_steps: 6
 dino_name: dinov3_vitb16
 dino_checkpoint: /home/pokuang/project/ContactWorld/data/pretrained_model/dino3/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
 dino_token_mode: patch
-dino_token_strategy: patch_only # patch_only | last4_avg | last4_concat_project
+dino_token_strategy: patch_only
 dino_last_layers: 4
 
-use_tactile: true
-tactile_key: tactile_rgb_right
-tactile_height: 10
-tactile_width: 14
-tactile_pool_mode: mean # mean |  attention
+use_tactile: false
 
 lowdim_keys: ee_pos,ee_quat,plug_pos,plug_quat,socket_pos_gt
 
@@ -34,17 +38,17 @@ attn_drop_rate: 0.0
 drop_path_rate: 0.0
 reg_loss_type: vc
 
-num_envs: 100
-max_steps: 15 #15 30 45 60
+num_envs: 25
+max_steps: 60
 ctxt_window: 4
 horizon: 6
-candidates: 64
-candidate_chunk_size: 2
+candidates: 32
+candidate_chunk_size: 1
 topk: 8
 iterations: 4
-goal_offset_steps: 12 # 12 24 36 48
+goal_offset_steps: 48
 seed: 42
-cost_mode: vision # vision |  vision_lowdim | vision_tactile | joint 
+cost_mode: vision
 lowdim_cost_weight: 1.0
 tactile_cost_weight: 1.0
 sum_all_diffs: false

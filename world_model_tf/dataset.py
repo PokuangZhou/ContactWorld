@@ -9,6 +9,8 @@ import torch.nn.functional as F
 import zarr
 from torch.utils.data import Dataset
 
+from pointcloud_utils import canonicalize_pointcloud
+
 
 IMAGENET_MEAN = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float32).view(1, 3, 1, 1)
 IMAGENET_STD = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float32).view(1, 3, 1, 1)
@@ -46,6 +48,18 @@ class ManiFeelSequenceDataset(Dataset):
         tactile_width: int = 14,
         tactile_force_scale: float = 0.002,
         pointcloud_scale: float = 0.4,
+        pc_tokenizer: str = "none",
+        pc_num_points: int | None = None,
+        pc_order_mode: str = "none",
+        pc_voxel_grid: str | list[int] | tuple[int, int, int] = (16, 16, 1),
+        pc_bounds: str | list[float] | tuple[float, float, float, float, float, float] = (
+            -0.4,
+            0.8,
+            -0.6,
+            0.6,
+            -0.2,
+            0.8,
+        ),
         lowdim_keys: list[str] | tuple[str, ...] = DEFAULT_LOWDIM_KEYS,
         normalize_images: bool = True,
         transform: Callable[[dict], dict] | None = None,
@@ -67,6 +81,11 @@ class ManiFeelSequenceDataset(Dataset):
         self.tactile_width = int(tactile_width)
         self.tactile_force_scale = float(tactile_force_scale)
         self.pointcloud_scale = float(pointcloud_scale)
+        self.pc_tokenizer = str(pc_tokenizer).lower()
+        self.pc_num_points = None if pc_num_points is None else int(pc_num_points)
+        self.pc_order_mode = str(pc_order_mode).lower()
+        self.pc_voxel_grid = pc_voxel_grid
+        self.pc_bounds = pc_bounds
         self.lowdim_keys = tuple(lowdim_keys)
         self.normalize_images = normalize_images
         self.transform = transform
@@ -130,16 +149,16 @@ class ManiFeelSequenceDataset(Dataset):
         x = torch.from_numpy(np.asarray(pc)).float()
         if x.ndim != 3:
             raise ValueError(f"Expected pointcloud [T,N,C], got {tuple(x.shape)}")
-        if x.size(-1) < 3:
-            raise ValueError(f"Pointcloud last dim must be >=3, got {x.size(-1)}")
-        x = x[..., : self.pc_in_channels].clone()
-        x[..., :3] = x[..., :3] / self.pointcloud_scale
-        if x.size(-1) >= 6:
-            rgb = x[..., 3:6]
-            if rgb.max() > 1.5:
-                rgb = rgb / 255.0
-            x[..., 3:6] = rgb
-        return x.contiguous()
+        return canonicalize_pointcloud(
+            x,
+            pc_in_channels=self.pc_in_channels,
+            pointcloud_scale=self.pointcloud_scale,
+            pc_tokenizer=self.pc_tokenizer,
+            pc_num_points=self.pc_num_points,
+            pc_order_mode=self.pc_order_mode,
+            pc_voxel_grid=self.pc_voxel_grid,
+            pc_bounds=self.pc_bounds,
+        )
 
     def _preprocess_tactile(self, tactile: np.ndarray) -> torch.Tensor:
         x = torch.from_numpy(np.asarray(tactile)).float()

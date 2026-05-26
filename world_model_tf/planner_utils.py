@@ -9,6 +9,7 @@ import torch
 import torch.nn.functional as F
 
 from dataset import DEFAULT_LOWDIM_KEYS, IMAGENET_MEAN, IMAGENET_STD
+from pointcloud_utils import canonicalize_pointcloud
 
 
 # cost_mode choices: vision | vision_lowdim | vision_tactile | vision_tactile_lowdim
@@ -87,18 +88,31 @@ def _preprocess_image_sequence(images, *, image_size: int, device: str) -> torch
     return (x - mean) / std
 
 
-def _preprocess_pointcloud_sequence(points, *, device: str, pc_in_channels: int, pointcloud_scale: float) -> torch.Tensor:
+def _preprocess_pointcloud_sequence(
+    points,
+    *,
+    device: str,
+    pc_in_channels: int,
+    pointcloud_scale: float,
+    pc_tokenizer: str = "none",
+    pc_num_points: int | None = None,
+    pc_order_mode: str = "none",
+    pc_voxel_grid="16,16,1",
+    pc_bounds="-0.4,0.8,-0.6,0.6,-0.2,0.8",
+) -> torch.Tensor:
     x = _to_tensor(points, device)
     if x.ndim != 4:
         raise ValueError(f"Expected pointcloud [B,T,N,C], got {tuple(x.shape)}")
-    x = x[..., :pc_in_channels].clone()
-    x[..., :3] = x[..., :3] / float(pointcloud_scale)
-    if x.size(-1) >= 6:
-        rgb = x[..., 3:6]
-        if rgb.max() > 1.5:
-            rgb = rgb / 255.0
-        x[..., 3:6] = rgb
-    return x
+    return canonicalize_pointcloud(
+        x,
+        pc_in_channels=pc_in_channels,
+        pointcloud_scale=pointcloud_scale,
+        pc_tokenizer=pc_tokenizer,
+        pc_num_points=pc_num_points,
+        pc_order_mode=pc_order_mode,
+        pc_voxel_grid=pc_voxel_grid,
+        pc_bounds=pc_bounds,
+    )
 
 
 def _preprocess_tactile_sequence(
@@ -172,6 +186,11 @@ def build_model_batch_from_raw(
     lowdim_stats: dict[str, dict[str, torch.Tensor]],
     pc_in_channels: int = 3,
     pointcloud_scale: float = 0.4,
+    pc_tokenizer: str = "none",
+    pc_num_points: int | None = None,
+    pc_order_mode: str = "none",
+    pc_voxel_grid="16,16,1",
+    pc_bounds="-0.4,0.8,-0.6,0.6,-0.2,0.8",
     use_tactile: bool = False,
     tactile_key: str = "tactile_force_field_right",
     tactile_height: int = 10,
@@ -186,6 +205,11 @@ def build_model_batch_from_raw(
             device=device,
             pc_in_channels=pc_in_channels,
             pointcloud_scale=pointcloud_scale,
+            pc_tokenizer=pc_tokenizer,
+            pc_num_points=pc_num_points,
+            pc_order_mode=pc_order_mode,
+            pc_voxel_grid=pc_voxel_grid,
+            pc_bounds=pc_bounds,
         )
     else:
         raise ValueError(f"Unknown vision_type: {vision_type}")
@@ -356,6 +380,11 @@ class BatchedCEMPlanner:
         lowdim_stats: dict[str, dict[str, torch.Tensor]],
         pc_in_channels: int = 3,
         pointcloud_scale: float = 0.4,
+        pc_tokenizer: str = "none",
+        pc_num_points: int | None = None,
+        pc_order_mode: str = "none",
+        pc_voxel_grid="16,16,1",
+        pc_bounds="-0.4,0.8,-0.6,0.6,-0.2,0.8",
         use_tactile: bool = False,
         tactile_key: str = "tactile_force_field_right",
         tactile_height: int = 10,
@@ -374,6 +403,11 @@ class BatchedCEMPlanner:
         self.lowdim_stats = lowdim_stats
         self.pc_in_channels = pc_in_channels
         self.pointcloud_scale = pointcloud_scale
+        self.pc_tokenizer = pc_tokenizer
+        self.pc_num_points = pc_num_points
+        self.pc_order_mode = pc_order_mode
+        self.pc_voxel_grid = pc_voxel_grid
+        self.pc_bounds = pc_bounds
         self.use_tactile = use_tactile
         self.tactile_key = tactile_key
         self.tactile_height = tactile_height
@@ -397,6 +431,11 @@ class BatchedCEMPlanner:
             lowdim_stats=self.lowdim_stats,
             pc_in_channels=self.pc_in_channels,
             pointcloud_scale=self.pointcloud_scale,
+            pc_tokenizer=self.pc_tokenizer,
+            pc_num_points=self.pc_num_points,
+            pc_order_mode=self.pc_order_mode,
+            pc_voxel_grid=self.pc_voxel_grid,
+            pc_bounds=self.pc_bounds,
             use_tactile=self.use_tactile,
             tactile_key=self.tactile_key,
             tactile_height=self.tactile_height,

@@ -15,6 +15,7 @@ from dataset import DEFAULT_LOWDIM_KEYS, ManiFeelSequenceDataset, parse_key_list
 from encoders import DINO_TOKEN_MODES, DINO_TOKEN_STRATEGIES, DinoSpatialEncoder, VJEPASpatialEncoder
 from lightning_module import PredictorTrainingModule
 from model import TACTILE_POOL_MODES, PointCloudSpatialEncoder, PredictorConfig, SpatialActionConditionedModel
+from pointcloud_utils import PC_TOKENIZERS, effective_pc_num_points
 
 
 def _build_parser(pre_parser):
@@ -62,6 +63,11 @@ def _build_parser(pre_parser):
     parser.add_argument("--tactile-force-scale", type=float, default=0.002)
     parser.add_argument("--tactile-pool-mode", type=str, default="mean", choices=TACTILE_POOL_MODES)
     parser.add_argument("--pointcloud-scale", type=float, default=0.4)
+    parser.add_argument("--pc-tokenizer", type=str, default="none", choices=PC_TOKENIZERS)
+    parser.add_argument("--pc-num-points", type=int, default=None)
+    parser.add_argument("--pc-order-mode", type=str, default="none", choices=["none", "xyz"])
+    parser.add_argument("--pc-voxel-grid", default="16,16,1")
+    parser.add_argument("--pc-bounds", default="-0.4,0.8,-0.6,0.6,-0.2,0.8")
     parser.add_argument("--lowdim-keys", type=str, default=",".join(DEFAULT_LOWDIM_KEYS))
 
     parser.add_argument("--dino-name", type=str, default="dinov3_vitl16")
@@ -125,7 +131,12 @@ def parse_args():
 
 def build_encoder(args, dataset: ManiFeelSequenceDataset):
     if args.vision_type == "pc":
-        num_points = int(dataset.data[args.vision_key].shape[1])
+        num_points = effective_pc_num_points(
+            int(dataset.data[args.vision_key].shape[1]),
+            pc_tokenizer=args.pc_tokenizer,
+            pc_num_points=args.pc_num_points,
+            pc_voxel_grid=args.pc_voxel_grid,
+        )
         return PointCloudSpatialEncoder(
             in_channels=args.pc_in_channels,
             num_points=num_points,
@@ -189,6 +200,11 @@ def main():
         tactile_width=args.tactile_width,
         tactile_force_scale=args.tactile_force_scale,
         pointcloud_scale=args.pointcloud_scale,
+        pc_tokenizer=args.pc_tokenizer,
+        pc_num_points=args.pc_num_points,
+        pc_order_mode=args.pc_order_mode,
+        pc_voxel_grid=args.pc_voxel_grid,
+        pc_bounds=args.pc_bounds,
         lowdim_keys=lowdim_keys,
     )
     train_len = int(len(dataset) * args.train_ratio)

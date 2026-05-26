@@ -20,6 +20,7 @@ from config_utils import build_config_aware_parser
 from dataset import DEFAULT_LOWDIM_KEYS, ManiFeelSequenceDataset, parse_key_list
 from encoders import DINO_TOKEN_MODES, DINO_TOKEN_STRATEGIES, DinoSpatialEncoder
 from model import TACTILE_POOL_MODES, PointCloudSpatialEncoder, PredictorConfig, SpatialActionConditionedModel
+from pointcloud_utils import PC_TOKENIZERS, effective_pc_num_points
 from planner_utils import (
     PLANNER_COST_MODES,
     BatchedCEMPlanner,
@@ -43,6 +44,27 @@ def is_rgb_like_key(key: str) -> bool:
     return any(tok in key for tok in ["image", "camera", "rgb", "taxim", "vision"])
 
 
+def ensure_pointcloud_depth_camera(cfg) -> None:
+    camera_configs = cfg.task.env.get("camera_configs")
+    if camera_configs is None:
+        raise ValueError("Pointcloud eval requires task.env.camera_configs.")
+
+    names = [str(cam.get("name")) for cam in camera_configs]
+    if "front_depth" in names:
+        return
+    if "front" not in names:
+        raise ValueError("Pointcloud eval requires a front RGB camera to clone into front_depth.")
+
+    front_cfg = next(cam for cam in camera_configs if str(cam.get("name")) == "front")
+    depth_cfg = OmegaConf.create(OmegaConf.to_container(front_cfg, resolve=True))
+    with open_dict(depth_cfg):
+        depth_cfg.name = "front_depth"
+        depth_cfg.image_type = "depth"
+
+    with open_dict(cfg.task.env):
+        camera_configs.append(depth_cfg)
+
+
 def make_env(args) -> MultipleIsaacEnvWrapper:
     if not GlobalHydra.instance().is_initialized():
         initialize_config_dir(config_dir=str(MANIFEEL_DIR / "config"), version_base="1.1")
@@ -51,7 +73,9 @@ def make_env(args) -> MultipleIsaacEnvWrapper:
     cfg.num_envs = args.num_envs
     cfg.headless = True
     cfg.capture_video = False
-    cfg.force_render = False
+    cfg.force_render = bool(args.vision_type == "pc")
+    if args.vision_type == "pc":
+        ensure_pointcloud_depth_camera(cfg)
 
     obs_meta = {
         "plug_pos": {"type": "low_dim"},
@@ -96,7 +120,8 @@ def make_env(args) -> MultipleIsaacEnvWrapper:
         "tactile_force_field_right": [10, 14, 3],
     }
     if args.vision_type == "pc":
-        required_obs_dims[args.vision_key] = [224 * 224, args.pc_in_channels]
+        raw_num_points = getattr(args, "pc_raw_num_points", None) or 1024
+        required_obs_dims[args.vision_key] = [int(raw_num_points), args.pc_in_channels]
     if args.use_tactile:
         tactile_key = args.tactile_key.lower()
         if "force_field" in tactile_key or "tacff" in tactile_key:
@@ -231,6 +256,11 @@ def build_dataset(args, lowdim_keys):
         tactile_width=args.tactile_width,
         tactile_force_scale=args.tactile_force_scale,
         pointcloud_scale=args.pointcloud_scale,
+        pc_tokenizer=args.pc_tokenizer,
+        pc_num_points=args.pc_num_points,
+        pc_order_mode=args.pc_order_mode,
+        pc_voxel_grid=args.pc_voxel_grid,
+        pc_bounds=args.pc_bounds,
         lowdim_keys=lowdim_keys,
     )
 
@@ -239,7 +269,12 @@ def build_model(args, dataset):
     if args.vision_type == "pc":
         encoder = PointCloudSpatialEncoder(
             in_channels=args.pc_in_channels,
-            num_points=int(dataset.data[args.vision_key].shape[1]),
+            num_points=effective_pc_num_points(
+                int(dataset.data[args.vision_key].shape[1]),
+                pc_tokenizer=args.pc_tokenizer,
+                pc_num_points=args.pc_num_points,
+                pc_voxel_grid=args.pc_voxel_grid,
+            ),
             embed_dim=args.predictor_embed_dim,
         )
     else:
@@ -303,6 +338,12 @@ def _build_parser(pre_parser):
     parser.add_argument("--tactile-force-scale", type=float, default=0.002)
     parser.add_argument("--tactile-pool-mode", type=str, default="mean", choices=TACTILE_POOL_MODES)
     parser.add_argument("--pointcloud-scale", type=float, default=0.4)
+    parser.add_argument("--pc-tokenizer", type=str, default="none", choices=PC_TOKENIZERS)
+    parser.add_argument("--pc-num-points", type=int, default=None)
+    parser.add_argument("--pc-raw-num-points", type=int, default=None)
+    parser.add_argument("--pc-order-mode", type=str, default="none", choices=["none", "xyz"])
+    parser.add_argument("--pc-voxel-grid", default="16,16,1")
+    parser.add_argument("--pc-bounds", default="-0.4,0.8,-0.6,0.6,-0.2,0.8")
 
     parser.add_argument("--dino-name", type=str, default="dinov3_vitl16")
     parser.add_argument("--dino-checkpoint", type=str, default=None)
@@ -362,14 +403,6 @@ def parse_args():
             missing.append("--" + name.replace("_", "-"))
     if missing:
         parser.error(f"{', '.join(missing)} is required (provide it in command line or config YAML).")
-    if args.candidates <= 0:
-        parser.error("--candidates must be positive.")
-    if args.topk <= 0:
-        parser.error("--topk must be positive.")
-    if args.topk > args.candidates:
-        parser.error(f"--topk ({args.topk}) must be <= --candidates ({args.candidates}).")
-    if args.candidate_chunk_size <= 0:
-        parser.error("--candidate-chunk-size must be positive.")
     args.output_dir = Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     return args
@@ -381,18 +414,12 @@ def main():
     torch.manual_seed(args.seed)
     if args.device.startswith("cuda") and not torch.cuda.is_available():
         args.device = "cpu"
-    print(
-        "[INFO] planner eval config: "
-        f"device={args.device}, num_envs={args.num_envs}, max_steps={args.max_steps}, "
-        f"horizon={args.horizon}, candidates={args.candidates}, topk={args.topk}, "
-        f"iterations={args.iterations}, candidate_chunk_size={args.candidate_chunk_size}, "
-        f"cost_mode={args.cost_mode}",
-        flush=True,
-    )
 
     lowdim_keys = tuple(parse_key_list(args.lowdim_keys))
-    print(f"[INFO] loading dataset: {args.data_root}", flush=True)
+    print("[INFO] loading dataset", flush=True)
     dataset = build_dataset(args, lowdim_keys)
+    if args.pc_raw_num_points is None and args.vision_type == "pc":
+        args.pc_raw_num_points = int(dataset.data[args.vision_key].shape[1])
     action_dim = dataset.action_dim()
     all_actions = np.asarray(dataset.data["action"], dtype=np.float32).reshape(-1, action_dim)
     action_mean = all_actions.mean(axis=0).astype(np.float32)
@@ -400,9 +427,9 @@ def main():
     print("Dataset action mean:", action_mean, flush=True)
     print("Dataset action std:", action_std, flush=True)
 
-    print(f"[INFO] loading model checkpoint: {args.checkpoint}", flush=True)
+    print("[INFO] loading model", flush=True)
     model = build_model(args, dataset)
-    print("[INFO] model loaded; initializing planner", flush=True)
+    print("[INFO] initializing planner", flush=True)
     planner = BatchedCEMPlanner(
         model=model,
         cfg=PlannerConfig(
@@ -437,6 +464,11 @@ def main():
         lowdim_stats=dataset.lowdim_stats,
         pc_in_channels=args.pc_in_channels,
         pointcloud_scale=args.pointcloud_scale,
+        pc_tokenizer=args.pc_tokenizer,
+        pc_num_points=args.pc_num_points,
+        pc_order_mode=args.pc_order_mode,
+        pc_voxel_grid=args.pc_voxel_grid,
+        pc_bounds=args.pc_bounds,
         use_tactile=args.use_tactile,
         tactile_key=args.tactile_key,
         tactile_height=args.tactile_height,
@@ -456,12 +488,12 @@ def main():
 
     print("[INFO] creating IsaacGym env", flush=True)
     env = make_env(args)
-    print("[INFO] IsaacGym env created; resetting to sampled dataset state", flush=True)
+    print("[INFO] resetting IsaacGym env", flush=True)
     _ = env.reset()
     reset_env_to_dataset_state(env, batch)
     zero_action = np.zeros((args.num_envs, action_dim), dtype=np.float32)
     obs, _, _, _ = env.step(zero_action)
-    print("[INFO] env reset complete; starting planner rollout loop", flush=True)
+    print("[INFO] starting planner rollout", flush=True)
 
     history = init_history_buffers(
         obs=obs,
@@ -482,7 +514,6 @@ def main():
     prev_action = zero_action.copy()
 
     for step_idx in range(args.max_steps):
-        print(f"[step {step_idx + 1:03d}/{args.max_steps}] planning...", flush=True)
         action_np, _, cost_np = planner.plan(history, goal_info, prev_action=prev_action)
         last_cost = np.asarray(cost_np, dtype=np.float32)
         if args.stop_on_success:

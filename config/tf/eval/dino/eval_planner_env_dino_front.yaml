@@ -31,14 +31,14 @@ drop_path_rate: 0.0
 reg_loss_type: vc
 
 num_envs: 100
-max_steps: 60 #15 30 45 60
+max_steps: 15 #15 30 45 60
 ctxt_window: 4
 horizon: 6
 candidates: 64
 candidate_chunk_size: 2
 topk: 8
 iterations: 4
-goal_offset_steps: 48 # 12 24 36 48
+goal_offset_steps: 12 # 12 24 36 48
 seed: 42
 cost_mode: vision # vision |  vision_lowdim | vision_tactile | joint 
 lowdim_cost_weight: 1.0
