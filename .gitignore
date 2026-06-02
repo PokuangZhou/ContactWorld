@@ -18,6 +18,10 @@ logs/
 .cache/
 outputs/
 
+# Transformer world model experiments
+config/tf/
+world_model_tf/
+
 # Third-party repositories and SDKs
 thirdparty/*
 !thirdparty/.gitkeep
