@@ -1,6 +1,17 @@
 # Local data and pretrained checkpoints
-data/pretrained_model/
-data/demo_data/
+data/pretrained_model/*
+!data/pretrained_model/.gitkeep
+!data/pretrained_model/dino3/
+data/pretrained_model/dino3/*
+!data/pretrained_model/dino3/.gitkeep
+!data/pretrained_model/ijepa/
+data/pretrained_model/ijepa/*
+!data/pretrained_model/ijepa/.gitkeep
+!data/pretrained_model/vjepa2/
+data/pretrained_model/vjepa2/*
+!data/pretrained_model/vjepa2/.gitkeep
+data/demo_data/*
+!data/demo_data/.gitkeep
 
 # Generated logs, caches, and experiment outputs
 logs/
@@ -8,7 +19,8 @@ logs/
 outputs/
 
 # Third-party repositories and SDKs
-thirdparty/
+thirdparty/*
+!thirdparty/.gitkeep
 
 # Python generated files
 __pycache__/
