@@ -1,15 +1,3 @@
-## some extra folder
-
-```bash
-cd ContactWorld
-mkdir thirdparty
-cd ContactWorld/data
-mkdir demo_data
-mkdir pretrained_model
-cd pretrained_model
-mkdir dino3
-```
-
 ## git clone mafeel repo
 ```bash
 cd ContactWorld/thirdparty
@@ -43,7 +31,7 @@ cd ContactWorld/data/pretrained_model/dino3
 gdown "https://drive.google.com/file/d/1m_WYeLRM50KT6M2MfTUtJro2px5e0Rmt/view?usp=sharing"
 ```
 
-data
+data from huggingface
 ```bash
 cd ContactWorld/data/demo_data
 gdown "data\link"

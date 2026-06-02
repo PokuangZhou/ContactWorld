@@ -1,0 +1,17 @@
+python vis_utils/vis_modalities.py \
+  --mode export \
+  --pc_zarr_path data/disassembly_barbed_spike/data/pointcloud \
+  --front_zarr_path data/disassembly_barbed_spike/data/front \
+  --wrist_zarr_path data/disassembly_barbed_spike/data/wrist \
+  --tacrgb_zarr_path data/disassembly_barbed_spike/data/tactile_rgb_right \
+  --tacdepth_zarr_path data/disassembly_barbed_spike/data/tactile_depth_right \
+  --tacff_zarr_path data/disassembly_barbed_spike/data/tactile_force_field_right \
+  --npz_path logs/vis/disassembly_barbed_spike/pc.npz \
+  --start 0 \
+  --end 1000 \
+  --stride 5 \
+  --rx 60 \
+  --ry 120 \
+  --rz 100 \
+  --tacff_resolution 128 \
+  --tacff_arrow_scale 0.0008

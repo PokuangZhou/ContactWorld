@@ -1,0 +1,10 @@
+base:
+  height: 0.005
+  density: 2700.0
+gears:
+  height: 0.020
+  density: 8000.0
+  grasp_offset: 0.017
+shafts:
+  height: 0.06
+  diameter: 0.02

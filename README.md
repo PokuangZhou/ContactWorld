@@ -5,20 +5,11 @@ models in contact-rich manipulation. It focuses on tasks such as insertion,
 disassembly, screwing, and exploratory contact, with tools for multimodal
 sequence learning and planner-in-the-loop evaluation.
 
-The current release builds on the ManiFeel / TacSL IsaacGym stack and adds
-Transformer world-model training and evaluation utilities.
+[project link](https://github.com/PokuangZhou/ContactWorld) | [paper link](https://github.com/PokuangZhou/ContactWorld)
 
 ## Teaser
 
 ![ContactWorld teaser](media/teaser.png)
-
-[PDF version](media/teaser.pdf)
-
-## Architecture
-
-![ContactWorld architecture](media/architecture.png)
-
-[PDF version](media/architecture.pdf)
 
 ## Highlights
 
@@ -46,7 +37,9 @@ ContactWorld/
   world_model_tf/         # ContactWorld Transformer world-model code
 ```
 
-## Setup
+## Easy Setup
+
+details can refer to [patch helper](scripts/manifeel_codepatch/readme.md).
 
 Install the ManiFeel/TacSL dependencies from the patch helper:
 
@@ -153,6 +146,14 @@ scripts/eval_planner_tf_test.sh \
   --topk 2 \
   --iterations 1
 ```
+
+## Addtion Information
+ContactWorld/eval_planner_dy.py is for dynamic-horizon, and current default is fixed
+ContactWorld/eval_planner_sorting.py is for sorting task (for addiiton case id needed)
+
+after download the assets/industreal.tar, need to replace 👉
+ContactWorld/thirdparty/manifeel-isaacgymenvs/assets/industreal
+
 
 ## Citation
 
