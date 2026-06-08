@@ -13,7 +13,7 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 </p>
 
 <p align="center">
-<img src="media/teaser.png" alt="ContactWorld teaser" width="90%" />
+<img src="media/cw_teaser.gif" alt="ContactWorld teaser" width="90%" />
 </p>
 
 ## Highlights
