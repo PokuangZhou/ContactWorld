@@ -42,8 +42,8 @@ PARENT_DIR="$(dirname "$SCRIPT_DIR")"
 CONDA_BASE="$("$CONDA_CMD" info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')"
 
 # Function to prompt the user for the Miniforge/conda home directory.
-# The environment is always named "cw" and will be created at
-# <miniforge_home>/envs/cw. Press Enter to accept the detected default.
+# The environment is always named "contactworld" and will be created at
+# <miniforge_home>/envs/contactworld. Press Enter to accept the detected default.
 # In CI mode (CI=true), the default is used automatically without prompting.
 get_conda_env_path() {
     local default_home="$CONDA_BASE"
@@ -66,7 +66,7 @@ get_conda_env_path() {
         fi
     fi
 
-    CONDA_ENV_PATH="$MINIFORGE_HOME/envs/cw"
+    CONDA_ENV_PATH="$MINIFORGE_HOME/envs/contactworld"
     echo "✓ Environment will be created at: $CONDA_ENV_PATH"
 }
 

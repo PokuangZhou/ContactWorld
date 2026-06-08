@@ -1,15 +1,20 @@
-# ContactWorld
+<div align="center">
+<h2> ContactWorld: <br>
+What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 
-**ContactWorld** is a benchmark and codebase for studying vision-tactile world
-models in contact-rich manipulation. It focuses on tasks such as insertion,
-disassembly, screwing, and exploratory contact, with tools for multimodal
-sequence learning and planner-in-the-loop evaluation.
+<a href="https://github.com/PokuangZhou/ContactWorld"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
+<a href="https://github.com/PokuangZhou/ContactWorld"><img src="https://img.shields.io/badge/Paper-Link-red" alt="Paper Link"></a>
+<a href="https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow" alt="Dataset"></a>
 
-[project link](https://github.com/PokuangZhou/ContactWorld) | [paper link](https://github.com/PokuangZhou/ContactWorld)
+</div>
 
-## Teaser
+<p style="width: 90%; margin: 0 auto; text-align: justify;">
+<strong>ContactWorld</strong> systematically studies vision-tactile world models across 12 contact-rich manipulation tasks and shows that spatially structured, temporally continuous representations are crucial for stable long-horizon planning. Experiments further demonstrate that point-cloud observations and compatible tactile force-field representations substantially improve planning success, highlighting the importance of representation structure, multimodal compatibility, and tactile sensing under long-horizon contact uncertainty.
+</p>
 
-![ContactWorld teaser](media/teaser.png)
+<p align="center">
+<img src="media/teaser.png" alt="ContactWorld teaser" width="90%" />
+</p>
 
 ## Highlights
 
@@ -41,27 +46,13 @@ ContactWorld/
 
 details can refer to [patch helper](scripts/manifeel_codepatch/readme.md).
 
-Install the ManiFeel/TacSL dependencies from the patch helper:
-
+Please read the patch helper's readme, it will git clone the thirdparty repo and download data, if you agree to precess, directly run
 ```bash
-cd /home/pokuang/project/ContactWorld
-scripts/manifeel_codepatch/install.sh
+bash install_cw.sh
 ```
 
-After cloning or installing third-party repositories, apply the ContactWorld
-patches:
-
-```bash
-cd /home/pokuang/project/ContactWorld
-scripts/manifeel_codepatch/replace_code.sh
-```
-
-Activate the conda environment:
-
-```bash
-conda activate /home/pokuang/miniforge3/envs/cw
-export LD_LIBRARY_PATH=${CONDA_PREFIX}/lib:${LD_LIBRARY_PATH}
-```
+## demo data and checkpoint download link
+💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld)
 
 ## Required Local Assets
 

@@ -5,22 +5,21 @@ import isaacgym
 # from isaacgymenvs.utils.utils import set_seed
 from isaacgymenvs.tasks.tacsl.tacsl_task_insertion import TacSLTaskInsertion
 from isaacgymenvs.tasks.tacsl.tacsl_task_usb import TacSLTaskUSB
-# from isaacgymenvs.tasks.tacsl.tacsl_task_power import TacSLTaskPower
+from isaacgymenvs.tasks.tacsl.tacsl_task_peg import TacSLTaskPeg
+from isaacgymenvs.tasks.tacsl.tacsl_task_power import TacSLTaskPower
 from isaacgymenvs.tasks.tacsl.tacsl_task_bolt_nut import TacSLTaskBoltNut
-# from isaacgymenvs.tasks.tacsl.tacsl_task_bulb import TacSLTaskBulb
-# from isaacgymenvs.tasks.tacsl.tacsl_task_sorting_normal import TacSLTaskSortingNormal
-# from isaacgymenvs.tasks.tacsl.tacsl_task_barbed_spike import TacSLTaskBarbedSpike
-# from isaacgymenvs.tasks.tacsl.tacsl_task_barbed_flat import TacSLTaskBarbedFlat
-# from isaacgymenvs.tasks.tacsl.tacsl_task_lidded_loose_plug import TacSLTaskLiddedLoose
-# from isaacgymenvs.tasks.tacsl.tacsl_task_search import TacSLTaskSearch
-# from isaacgymenvs.tasks.tacsl.tacsl_task_valve import TacSLTaskValve
-# from isaacgymenvs.tasks.tacsl.tacsl_task_valve_big import TacSLTaskValveBig
-# from isaacgymenvs.tasks.tacsl.tacsl_task_plug import TacSLTaskPlug
 from isaacgymenvs.tasks.tacsl.tacsl_task_bulb import TacSLTaskBulb
+from isaacgymenvs.tasks.tacsl.tacsl_task_sorting_normal import TacSLTaskSortingNormal
+from isaacgymenvs.tasks.tacsl.tacsl_task_sorting_dim import TacSLTaskSortingDim
+from isaacgymenvs.tasks.tacsl.tacsl_task_barbed_spike import TacSLTaskBarbedSpike
+from isaacgymenvs.tasks.tacsl.tacsl_task_barbed_flat import TacSLTaskBarbedFlat
+from isaacgymenvs.tasks.tacsl.tacsl_task_lidded_loose_plug import TacSLTaskLiddedLoose
+from isaacgymenvs.tasks.tacsl.tacsl_task_search import TacSLTaskSearch
+from isaacgymenvs.tasks.tacsl.tacsl_task_valve import TacSLTaskValve
 
 from isaacgymenvs.utils.reformat import omegaconf_to_dict
 
-from utils.shear_tactile_viz_utils import visualize_tactile_shear_image, visualize_penetration_depth
+from vis_utils.shear_tactile_viz_utils import visualize_tactile_shear_image
 import torch
 import numpy as np
 import cv2
@@ -33,17 +32,17 @@ from omegaconf import DictConfig, OmegaConf
 isaacgym_task_map = {
     "TacSLTaskInsertion": TacSLTaskInsertion,
     "TacSLTaskUSB": TacSLTaskUSB,
-    # "TacSLTaskPower": TacSLTaskPower,
+    "TacSLTaskPeg": TacSLTaskPeg,
+    "TacSLTaskPower": TacSLTaskPower,
     "TacSLTaskBoltNut": TacSLTaskBoltNut,
-    # "TacSLTaskBulb": TacSLTaskBulb,
-    # "TacSLTaskSortingNormal": TacSLTaskSortingNormal,
-    # "TacSLTaskBarbedSpike": TacSLTaskBarbedSpike,
-    # "TacSLTaskBarbedFlat": TacSLTaskBarbedFlat,
-    # "TacSLTaskLiddedLoose": TacSLTaskLiddedLoose,
-    # "TacSLTaskSearch": TacSLTaskSearch,
-    # "TacSLTaskValve": TacSLTaskValve,
-    # "TacSLTaskValveBig": TacSLTaskValveBig,
     "TacSLTaskBulb": TacSLTaskBulb,
+    "TacSLTaskSortingNormal": TacSLTaskSortingNormal,
+    "TacSLTaskSortingDim": TacSLTaskSortingDim,
+    "TacSLTaskBarbedSpike": TacSLTaskBarbedSpike,
+    "TacSLTaskBarbedFlat": TacSLTaskBarbedFlat,
+    "TacSLTaskLiddedLoose": TacSLTaskLiddedLoose,
+    "TacSLTaskSearch": TacSLTaskSearch,
+    "TacSLTaskValve": TacSLTaskValve,
 }
 
 class MultipleIsaacEnvWrapper():
