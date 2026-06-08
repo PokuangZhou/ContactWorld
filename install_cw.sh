@@ -5,20 +5,26 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${SCRIPT_DIR}"
 THIRDPARTY_ROOT="${REPO_ROOT}/thirdparty"
+REPLACE_PART_ROOT="${REPO_ROOT}/data/replace_part"
 PATCH_SCRIPT_DIR="${REPO_ROOT}/scripts/manifeel_codepatch"
 PATCHED_INSTALL="${PATCH_SCRIPT_DIR}/install.sh"
 REPLACE_SCRIPT="${PATCH_SCRIPT_DIR}/replace_code.sh"
 MANIFEEL_ROOT="${THIRDPARTY_ROOT}/manifeel"
+MANIFEEL_ISAACGYM_ROOT="${THIRDPARTY_ROOT}/manifeel-isaacgymenvs"
 ISAACGYM_TAR="${THIRDPARTY_ROOT}/IsaacGym_Preview_TacSL_Package.tar.gz"
 ISAACGYM_DIR="${THIRDPARTY_ROOT}/IsaacGym_Preview_TacSL_Package"
 DINO3_DIR="${REPO_ROOT}/data/pretrained_model/dino3"
 DINO3_CKPT="${DINO3_DIR}/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
+INDUSTREAL_TAR="${REPLACE_PART_ROOT}/industreal.tar"
+INDUSTREAL_DST="${MANIFEEL_ISAACGYM_ROOT}/assets/industreal"
 
 MANIFEEL_REPO_URL="${MANIFEEL_REPO_URL:-https://github.com/purdue-mars/manifeel.git}"
 ISAACGYM_GDRIVE_URL="${ISAACGYM_GDRIVE_URL:-https://drive.google.com/file/d/13dFRF9EXpzIWaJF2Z6f7BsuPUGQkPE8v/view?usp=sharing}"
 DINO3_GDRIVE_URL="${DINO3_GDRIVE_URL:-https://drive.google.com/file/d/1m_WYeLRM50KT6M2MfTUtJro2px5e0Rmt/view?usp=sharing}"
+INDUSTREAL_URL="${INDUSTREAL_URL:-https://huggingface.co/datasets/Pokuang/ContactWorld/resolve/main/assets/industreal.tar}"
 SKIP_ISAACGYM_DOWNLOAD="${SKIP_ISAACGYM_DOWNLOAD:-false}"
 SKIP_DINO3_DOWNLOAD="${SKIP_DINO3_DOWNLOAD:-false}"
+SKIP_INDUSTREAL_ASSETS="${SKIP_INDUSTREAL_ASSETS:-false}"
 SKIP_MANIFEEL_INSTALL="${SKIP_MANIFEEL_INSTALL:-false}"
 SKIP_REPLACE_CODE="${SKIP_REPLACE_CODE:-false}"
 
@@ -75,6 +81,56 @@ download_with_gdown() {
     else
         "${GDOWN_BIN}" "${url}" -O "${output_path}"
     fi
+}
+
+download_file() {
+    local url="$1"
+    local output_path="$2"
+
+    if command -v wget >/dev/null 2>&1; then
+        wget -O "${output_path}" "${url}"
+    elif command -v curl >/dev/null 2>&1; then
+        curl -L "${url}" -o "${output_path}"
+    else
+        echo "ERROR: neither wget nor curl was found; cannot download ${url}" >&2
+        exit 1
+    fi
+}
+
+find_industreal_source() {
+    if [ -d "${REPLACE_PART_ROOT}/assets/industreal" ]; then
+        INDUSTREAL_SRC="${REPLACE_PART_ROOT}/assets/industreal"
+    elif [ -d "${REPLACE_PART_ROOT}/industreal" ]; then
+        INDUSTREAL_SRC="${REPLACE_PART_ROOT}/industreal"
+    elif [ -d "${REPLACE_PART_ROOT}/manifeel/assets/industreal" ]; then
+        INDUSTREAL_SRC="${REPLACE_PART_ROOT}/manifeel/assets/industreal"
+    else
+        echo "ERROR: extracted IndustReal assets directory not found under ${REPLACE_PART_ROOT}" >&2
+        exit 1
+    fi
+}
+
+replace_industreal_assets() {
+    find_industreal_source
+
+    if [ ! -d "${MANIFEEL_ISAACGYM_ROOT}" ]; then
+        echo "ERROR: manifeel-isaacgymenvs repo not found: ${MANIFEEL_ISAACGYM_ROOT}" >&2
+        echo "Run ManiFeel install first, or set SKIP_INDUSTREAL_ASSETS=true." >&2
+        exit 1
+    fi
+
+    mkdir -p "$(dirname "${INDUSTREAL_DST}")"
+
+    if [ -d "${INDUSTREAL_DST}" ]; then
+        local backup_root="${REPO_ROOT}/.cache/industreal_asset_backup/$(date +%Y%m%d_%H%M%S)"
+        mkdir -p "$(dirname "${backup_root}")"
+        mv "${INDUSTREAL_DST}" "${backup_root}"
+        echo "Backed up existing IndustReal assets to: ${backup_root}"
+    fi
+
+    mkdir -p "${INDUSTREAL_DST}"
+    cp -a "${INDUSTREAL_SRC}/." "${INDUSTREAL_DST}/"
+    echo "Copied ${INDUSTREAL_SRC} -> ${INDUSTREAL_DST}"
 }
 
 require_file "${PATCHED_INSTALL}" "patched ManiFeel install script"
@@ -144,7 +200,25 @@ fi
 echo ""
 
 echo "=========================================="
-echo "6. Apply ContactWorld Code Patch"
+echo "6. Download and Replace IndustReal Assets"
+echo "=========================================="
+if [ "${SKIP_INDUSTREAL_ASSETS}" = "true" ]; then
+    echo "Skipping IndustReal assets because SKIP_INDUSTREAL_ASSETS=true"
+else
+    mkdir -p "${REPLACE_PART_ROOT}"
+    if [ ! -f "${INDUSTREAL_TAR}" ]; then
+        download_file "${INDUSTREAL_URL}" "${INDUSTREAL_TAR}"
+    else
+        echo "IndustReal archive already exists: ${INDUSTREAL_TAR}"
+    fi
+
+    tar -xf "${INDUSTREAL_TAR}" -C "${REPLACE_PART_ROOT}"
+    replace_industreal_assets
+fi
+echo ""
+
+echo "=========================================="
+echo "7. Apply ContactWorld Code Patch"
 echo "=========================================="
 if [ "${SKIP_REPLACE_CODE}" = "true" ]; then
     echo "Skipping replace_code.sh because SKIP_REPLACE_CODE=true"

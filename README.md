@@ -18,11 +18,27 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 
 ## Highlights
 
-- Vision-tactile world-model training on ManiFeel-style zarr datasets.
-- DINOv3 visual encoders with tactile and low-dimensional state prediction.
-- CEM-style planner evaluation inside IsaacGym contact-rich environments.
-- Local smoke-test scripts for checking installation, training, checkpoint
-  loading, and planner rollout.
+- A JEPA-structured vision-tactile world model with a CEM-style planner.
+- We identify three key properties: spatial structure, temporal continuity, and cross-modal compatibility.
+- Easy-to-install, reproducible, and lightweight simulation environments based on Isaac Gym.
+
+
+## Easy Setup
+
+Please read the patch helper's README first. The script will clone the required third-party repositories and download the necessary data after you confirm to proceed. Then, you can directly run the installation command.
+Details can refer to [patch helper](scripts/manifeel_codepatch/readme.md).
+
+This installation requires [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html). Please make sure mamba is installed before running the script.
+
+
+```bash
+bash install_cw.sh
+```
+
+## demo data and checkpoint download link
+💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main)
+
+how to use those data please refer to [data helper](extract_dataset_ckpts_addto_README.md) 
 
 ## Repository Layout
 
@@ -33,38 +49,11 @@ ContactWorld/
     demo_data/            # Demo zarr datasets
     pretrained_model/     # Local pretrained checkpoints, e.g. DINOv3
     replace_part/         # Patch files applied to thirdparty ManiFeel repos
-  media/                  # Figures used in this README
+  media/                  # GIF used in README
   scripts/
     manifeel_codepatch/   # Install, data download, and thirdparty patch scripts
     train_tf_test.sh      # Minimal training/sanity test
-    eval_planner_tf_test.sh
-  thirdparty/             # ManiFeel, IsaacGym, DINOv3, diffusion_policy, etc.
-  world_model_tf/         # ContactWorld Transformer world-model code
-```
-
-## Easy Setup
-
-details can refer to [patch helper](scripts/manifeel_codepatch/readme.md).
-
-Please read the patch helper's readme, it will git clone the thirdparty repo and download data, if you agree to precess, directly run
-```bash
-bash install_cw.sh
-```
-
-## demo data and checkpoint download link
-💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld)
-
-## Required Local Assets
-
-The smoke-test scripts expect these paths by default:
-
-```text
-data/demo_data/insertion_usb
-data/pretrained_model/dino3/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth
-thirdparty/dinov3
-thirdparty/manifeel
-thirdparty/manifeel-isaacgymenvs
-thirdparty/IsaacGym_Preview_TacSL_Package
+    eval_planner_tf_test.sh # planner
 ```
 
 ## Quick Tests
@@ -73,7 +62,6 @@ Run a training smoke test. By default this uses the full demo dataset but only
 runs Lightning's sanity-check path (`EPOCHS=0`):
 
 ```bash
-cd /home/pokuang/project/ContactWorld
 scripts/train_tf_test.sh
 ```
 
@@ -142,22 +130,20 @@ scripts/eval_planner_tf_test.sh \
 ContactWorld/eval_planner_dy.py is for dynamic-horizon, and current default is fixed
 ContactWorld/eval_planner_sorting.py is for sorting task (for addiiton case id needed)
 
-after download the assets/industreal.tar, need to replace 👉
-ContactWorld/thirdparty/manifeel-isaacgymenvs/assets/industreal
-
 
 ## Citation
+If you find our work useful, please consider citing our paper.
 
 ```bibtex
 @article{zhang2026contactworld,
   title={ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation},
-  author={},
+  author={Zhiyuan Zhang, Pokuang Zhou, Kaidi Zhang, Adeesh Mahesh Desai, Temitope Ibrahim Amosa, Davood Soleymanzadeh, Jiuzhou Lei, Minghui Zheng, and Yu She},
   journal={},
   year={2026}
 }
 ```
 
-Related:
+Related work (Manifeel):
 
 ```bibtex
 @article{luu2025manifeel,
