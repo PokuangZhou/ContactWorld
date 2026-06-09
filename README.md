@@ -1,4 +1,6 @@
 <div align="center">
+<img src="media/logo.svg" alt="ContactWorld logo" width="180" />
+
 <h2> ContactWorld: <br>
 What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 
@@ -7,6 +9,15 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 <a href="https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow" alt="Dataset"></a>
 
 </div>
+
+<p align="center">
+<a href="https://github.com/ZhangZhiyuanZhang?tab=repositories">Zhiyuan Zhang</a>*,
+<a href="https://pokuangzhou.github.io/website/">Pokuang Zhou</a>*,
+<a href="https://aaronzkd.github.io/KaidiZhang.web/">Kaidi Zhang</a>,
+<a href="https://scholar.google.com/citations?user=A880yg0AAAAJ&hl=en&oi=ao">Adeesh Desai</a>,
+<a href="https://scholar.google.com/citations?user=Lloa6s4AAAAJ&hl=en&oi=ao">Temitope Amosa</a>, et al.<br>
+* Equal contribution. Supervisor: <a href="https://www.purduemars.com/people">Yu She</a>.
+</p>
 
 <p style="width: 90%; margin: 0 auto; text-align: justify;">
 <strong>ContactWorld</strong> systematically studies vision-tactile world models across 12 contact-rich manipulation tasks and shows that spatially structured, temporally continuous representations are crucial for stable long-horizon planning. Experiments further demonstrate that point-cloud observations and compatible tactile force-field representations substantially improve planning success, highlighting the importance of representation structure, multimodal compatibility, and tactile sensing under long-horizon contact uncertainty.
