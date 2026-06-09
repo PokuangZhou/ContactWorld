@@ -132,7 +132,7 @@ ContactWorld/eval_planner_sorting.py is for sorting task (for addiiton case id n
 
 
 ## Citation
-If you find our work useful, please consider citing our paper.
+If you find our work useful, please consider citing our paper. <img src="media/cat_thumbup.gif" alt="Cat thumbs up" width="42" />
 
 ```bibtex
 @article{zhang2026contactworld,
