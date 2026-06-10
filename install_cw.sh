@@ -27,12 +27,15 @@ SKIP_DINO3_DOWNLOAD="${SKIP_DINO3_DOWNLOAD:-false}"
 SKIP_INDUSTREAL_ASSETS="${SKIP_INDUSTREAL_ASSETS:-false}"
 SKIP_MANIFEEL_INSTALL="${SKIP_MANIFEEL_INSTALL:-false}"
 SKIP_REPLACE_CODE="${SKIP_REPLACE_CODE:-false}"
+CONTACTWORLD_NONINTERACTIVE="${CONTACTWORLD_NONINTERACTIVE:-true}"
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-contactworld}"
 
 echo "=========================================="
 echo "ContactWorld Setup"
 echo "=========================================="
 echo "Repo root: ${REPO_ROOT}"
 echo "Thirdparty root: ${THIRDPARTY_ROOT}"
+echo "Non-interactive ManiFeel install: ${CONTACTWORLD_NONINTERACTIVE}"
 echo ""
 
 require_file() {
@@ -121,16 +124,34 @@ replace_industreal_assets() {
 
     mkdir -p "$(dirname "${INDUSTREAL_DST}")"
 
-    if [ -d "${INDUSTREAL_DST}" ]; then
-        local backup_root="${REPO_ROOT}/.cache/industreal_asset_backup/$(date +%Y%m%d_%H%M%S)"
-        mkdir -p "$(dirname "${backup_root}")"
-        mv "${INDUSTREAL_DST}" "${backup_root}"
-        echo "Backed up existing IndustReal assets to: ${backup_root}"
-    fi
-
+    rm -rf "${INDUSTREAL_DST}"
     mkdir -p "${INDUSTREAL_DST}"
     cp -a "${INDUSTREAL_SRC}/." "${INDUSTREAL_DST}/"
     echo "Copied ${INDUSTREAL_SRC} -> ${INDUSTREAL_DST}"
+}
+
+get_contactworld_env_path() {
+    if [ -n "${CONDA_ENV_PATH:-}" ]; then
+        echo "${CONDA_ENV_PATH}"
+        return
+    fi
+
+    if [ -n "${MINIFORGE_HOME:-}" ]; then
+        echo "${MINIFORGE_HOME}/envs/${CONDA_ENV_NAME}"
+        return
+    fi
+
+    if command -v conda >/dev/null 2>&1; then
+        echo "$(conda info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')/envs/${CONDA_ENV_NAME}"
+        return
+    fi
+
+    if command -v mamba >/dev/null 2>&1; then
+        echo "$(mamba info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')/envs/${CONDA_ENV_NAME}"
+        return
+    fi
+
+    echo "${HOME}/miniforge3/envs/${CONDA_ENV_NAME}"
 }
 
 require_file "${PATCHED_INSTALL}" "patched ManiFeel install script"
@@ -195,7 +216,8 @@ echo "=========================================="
 if [ "${SKIP_MANIFEEL_INSTALL}" = "true" ]; then
     echo "Skipping ManiFeel install because SKIP_MANIFEEL_INSTALL=true"
 else
-    bash "${MANIFEEL_ROOT}/install.sh"
+    CONTACTWORLD_NONINTERACTIVE="${CONTACTWORLD_NONINTERACTIVE}" \
+        bash "${MANIFEEL_ROOT}/install.sh"
 fi
 echo ""
 
@@ -223,10 +245,14 @@ echo "=========================================="
 if [ "${SKIP_REPLACE_CODE}" = "true" ]; then
     echo "Skipping replace_code.sh because SKIP_REPLACE_CODE=true"
 else
-    bash "${REPLACE_SCRIPT}"
+    BACKUP=false bash "${REPLACE_SCRIPT}"
 fi
 echo ""
 
 echo "=========================================="
 echo "ContactWorld setup complete"
 echo "=========================================="
+echo ""
+echo "To activate the environment:"
+echo "  conda activate $(get_contactworld_env_path)"
+echo "  export LD_LIBRARY_PATH=\${CONDA_PREFIX}/lib:\${LD_LIBRARY_PATH}"

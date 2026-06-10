@@ -1,174 +1,196 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-set -e  # Exit on any error
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PARENT_DIR="$(dirname "${SCRIPT_DIR}")"
+
+CONTACTWORLD_NONINTERACTIVE="${CONTACTWORLD_NONINTERACTIVE:-true}"
+CONDA_ENV_NAME="${CONDA_ENV_NAME:-contactworld}"
+PYTHON_VERSION="${PYTHON_VERSION:-3.8}"
+MANIFEEL_ISAACGYM_REPO_URL="${MANIFEEL_ISAACGYM_REPO_URL:-https://github.com/purdue-mars/manifeel-isaacgymenvs.git}"
+DIFFUSION_POLICY_REPO_URL="${DIFFUSION_POLICY_REPO_URL:-https://github.com/real-stanford/diffusion_policy.git}"
 
 echo "=========================================="
 echo "ManiFeel Installation Script"
 echo "=========================================="
+echo "Script dir: ${SCRIPT_DIR}"
+echo "Thirdparty dir: ${PARENT_DIR}"
+echo ""
 
-# Check if conda or mamba is available
-if command -v mamba &> /dev/null; then
-    CONDA_CMD="mamba"
-    echo "✓ Found mamba"
-elif command -v conda &> /dev/null; then
-    CONDA_CMD="conda"
-    echo "✓ Found conda"
-else
-    echo "⚠ conda/mamba not found. Installing Miniforge3..."
-    
-    # Download Miniforge
-    wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh
-    
-    # Install Miniforge
-    bash Miniforge3-Linux-x86_64.sh -b -p $HOME/miniforge3
-    
-    # Initialize conda
-    $HOME/miniforge3/bin/conda init bash
-    
-    # Source bashrc to make conda available
-    source ~/.bashrc
-    
-    CONDA_CMD="$HOME/miniforge3/bin/conda"
-    
-    echo "✓ Miniforge3 installed successfully"
-    echo "Please restart your terminal or run: source ~/.bashrc"
-fi
+download_file() {
+    local url="$1"
+    local output_path="$2"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PARENT_DIR="$(dirname "$SCRIPT_DIR")"
+    if command -v wget >/dev/null 2>&1; then
+        wget -O "${output_path}" "${url}"
+    elif command -v curl >/dev/null 2>&1; then
+        curl -L "${url}" -o "${output_path}"
+    else
+        echo "ERROR: neither wget nor curl was found; cannot download ${url}" >&2
+        exit 1
+    fi
+}
 
-# Get conda base path early so we can use it as the default env path
-CONDA_BASE="$("$CONDA_CMD" info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')"
+ensure_conda() {
+    if command -v mamba >/dev/null 2>&1; then
+        CONDA_CREATE_CMD="mamba"
+        CONDA_EXE="$(command -v mamba)"
+        echo "Found mamba: ${CONDA_EXE}"
+    elif command -v conda >/dev/null 2>&1; then
+        CONDA_CREATE_CMD="conda"
+        CONDA_EXE="$(command -v conda)"
+        echo "Found conda: ${CONDA_EXE}"
+    else
+        local miniforge_home="${MINIFORGE_HOME:-${HOME}/miniforge3}"
+        local installer="${PARENT_DIR}/Miniforge3-Linux-x86_64.sh"
 
-# Function to prompt the user for the Miniforge/conda home directory.
-# The environment is always named "contactworld" and will be created at
-# <miniforge_home>/envs/contactworld. Press Enter to accept the detected default.
-# In CI mode (CI=true), the default is used automatically without prompting.
+        echo "conda/mamba not found. Installing Miniforge3 to ${miniforge_home}..."
+        if [ ! -x "${miniforge_home}/bin/conda" ]; then
+            download_file \
+                "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh" \
+                "${installer}"
+            bash "${installer}" -b -p "${miniforge_home}"
+        else
+            echo "Miniforge already exists: ${miniforge_home}"
+        fi
+
+        CONDA_CREATE_CMD="${miniforge_home}/bin/conda"
+        CONDA_EXE="${miniforge_home}/bin/conda"
+    fi
+
+    CONDA_BASE="$("${CONDA_EXE}" info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')"
+    if [ -z "${CONDA_BASE}" ] || [ ! -f "${CONDA_BASE}/etc/profile.d/conda.sh" ]; then
+        echo "ERROR: could not find conda initialization script under ${CONDA_BASE}" >&2
+        exit 1
+    fi
+}
+
 get_conda_env_path() {
-    local default_home="$CONDA_BASE"
+    local default_home="${MINIFORGE_HOME:-${CONDA_BASE}}"
+    local selected_home
 
     echo ""
     echo "=========================================="
     echo "Conda Environment Path"
     echo "=========================================="
-    echo "Detected Miniforge/conda home: $default_home"
 
-    if [ "${CI:-false}" = "true" ]; then
-        MINIFORGE_HOME="$default_home"
-        echo "CI mode: using default Miniforge home"
-    else
-        read -rp "Enter Miniforge home directory (press Enter to use default): " user_home
-        if [ -z "$user_home" ]; then
-            MINIFORGE_HOME="$default_home"
-        else
-            MINIFORGE_HOME="$user_home"
-        fi
+    if [ -n "${CONDA_ENV_PATH:-}" ]; then
+        echo "Using CONDA_ENV_PATH: ${CONDA_ENV_PATH}"
+        return
     fi
 
-    CONDA_ENV_PATH="$MINIFORGE_HOME/envs/contactworld"
-    echo "✓ Environment will be created at: $CONDA_ENV_PATH"
+    echo "Detected conda home: ${default_home}"
+    if [ "${CONTACTWORLD_NONINTERACTIVE}" = "true" ] || [ "${CI:-false}" = "true" ]; then
+        selected_home="${default_home}"
+        echo "Using default conda home in non-interactive mode"
+    else
+        read -r -p "Enter conda home directory (press Enter to use default): " selected_home
+        selected_home="${selected_home:-${default_home}}"
+    fi
+
+    CONDA_ENV_PATH="${selected_home}/envs/${CONDA_ENV_NAME}"
+    echo "Environment path: ${CONDA_ENV_PATH}"
 }
 
-echo ""
-echo "=========================================="
-echo "Setting up ManiFeel environment"
-echo "=========================================="
+create_or_reuse_env() {
+    echo ""
+    echo "=========================================="
+    echo "Setting up ManiFeel environment"
+    echo "=========================================="
 
-get_conda_env_path
+    get_conda_env_path
 
-# Create conda environment at the chosen path
-echo "Creating Python 3.8 environment at '$CONDA_ENV_PATH'..."
-$CONDA_CMD create --prefix "$CONDA_ENV_PATH" python=3.8 -y
+    if [ -d "${CONDA_ENV_PATH}" ]; then
+        echo "Conda environment already exists: ${CONDA_ENV_PATH}"
+    else
+        echo "Creating Python ${PYTHON_VERSION} environment at ${CONDA_ENV_PATH}..."
+        "${CONDA_CREATE_CMD}" create --prefix "${CONDA_ENV_PATH}" "python=${PYTHON_VERSION}" -y
+    fi
 
-source "$CONDA_BASE/etc/profile.d/conda.sh"
+    # shellcheck disable=SC1090
+    source "${CONDA_BASE}/etc/profile.d/conda.sh"
+    conda activate "${CONDA_ENV_PATH}"
 
-# Activate environment
-conda activate "$CONDA_ENV_PATH"
+    python -m pip install --upgrade pip
+}
+
+clone_or_reuse_repo() {
+    local repo_url="$1"
+    local repo_dir="$2"
+    local repo_name
+    repo_name="$(basename "${repo_dir}")"
+
+    if [ -d "${repo_dir}/.git" ]; then
+        echo "${repo_name} already exists: ${repo_dir}"
+    elif [ -d "${repo_dir}" ]; then
+        echo "ERROR: ${repo_dir} exists but is not a git repository." >&2
+        echo "Remove it or move it aside, then rerun this script." >&2
+        exit 1
+    else
+        echo "Cloning ${repo_name}..."
+        git clone "${repo_url}" "${repo_dir}"
+    fi
+}
+
+pip_install_editable() {
+    local package_dir="$1"
+    local label="$2"
+
+    echo "Installing ${label} from ${package_dir}"
+    python -m pip install -e "${package_dir}"
+}
+
+ensure_conda
+create_or_reuse_env
 
 echo ""
 echo "=========================================="
 echo "Installing IsaacGym TacSL"
 echo "=========================================="
-
+ISAACGYM_PYTHON_DIR="${PARENT_DIR}/IsaacGym_Preview_TacSL_Package/isaacgym/python"
 if [ "${CI:-false}" = "true" ]; then
-    echo "⏭ Skipping IsaacGym install in CI mode"
+    echo "Skipping IsaacGym install in CI mode"
+elif [ -d "${ISAACGYM_PYTHON_DIR}" ]; then
+    pip_install_editable "${ISAACGYM_PYTHON_DIR}" "IsaacGym TacSL"
 else
-    # Check if IsaacGym is already downloaded
-    if [ ! -d "$PARENT_DIR/IsaacGym_Preview_TacSL_Package" ]; then
-        echo "⚠ IsaacGym_Preview_TacSL_Package not found in parent directory."
-        echo "Please download it from: https://drive.google.com/file/d/1FHs1tf3QajvYb11UkLaLcDD9THL-C0G5/view"
-        echo "Extract it to: $PARENT_DIR"
-        echo "Then run this script again."
-        exit 1
-    else
-        echo "✓ Found IsaacGym_Preview_TacSL_Package"
-        pip install -e "$PARENT_DIR/IsaacGym_Preview_TacSL_Package/isaacgym/python/"
-    fi
+    echo "ERROR: IsaacGym TacSL package not found at ${ISAACGYM_PYTHON_DIR}" >&2
+    echo "Run the top-level install_cw.sh so it can download/extract IsaacGym first." >&2
+    exit 1
 fi
 
 echo ""
 echo "=========================================="
-echo "Cloning repositories"
+echo "Cloning and Installing Repositories"
 echo "=========================================="
-
-# Clone IsaacGymEnvs
 if [ "${CI:-false}" = "true" ]; then
-    echo "⏭ Skipping manifeel-isaacgymenvs clone in CI mode"
-elif [ ! -d "$PARENT_DIR/manifeel-isaacgymenvs" ]; then
-    echo "Cloning manifeel-isaacgymenvs..."
-    cd "$PARENT_DIR"
-    git clone https://github.com/purdue-mars/manifeel-isaacgymenvs.git
-    cd manifeel-isaacgymenvs
-    pip install -e .
+    echo "Skipping manifeel-isaacgymenvs clone/install in CI mode"
 else
-    echo "✓ manifeel-isaacgymenvs already exists"
-    cd "$PARENT_DIR/manifeel-isaacgymenvs"
-    pip install -e .
+    clone_or_reuse_repo "${MANIFEEL_ISAACGYM_REPO_URL}" "${PARENT_DIR}/manifeel-isaacgymenvs"
+    pip_install_editable "${PARENT_DIR}/manifeel-isaacgymenvs" "manifeel-isaacgymenvs"
 fi
 
-# Clone Diffusion Policy
-if [ ! -d "$PARENT_DIR/diffusion_policy" ]; then
-    echo "Cloning diffusion_policy..."
-    cd "$PARENT_DIR"
-    git clone https://github.com/real-stanford/diffusion_policy.git
-    cd diffusion_policy
-    pip install -e .
-else
-    echo "✓ diffusion_policy already exists"
-    cd "$PARENT_DIR/diffusion_policy"
-    pip install -e .
-fi
+clone_or_reuse_repo "${DIFFUSION_POLICY_REPO_URL}" "${PARENT_DIR}/diffusion_policy"
+pip_install_editable "${PARENT_DIR}/diffusion_policy" "diffusion_policy"
 
 echo ""
 echo "=========================================="
 echo "Installing ManiFeel"
 echo "=========================================="
+pip_install_editable "${SCRIPT_DIR}" "ManiFeel"
 
-# Install ManiFeel
-cd "$SCRIPT_DIR"
-pip install -e .
-
-# Install additional dependencies
 echo "Installing additional dependencies..."
-pip install wandb==0.12.21 dill==0.3.9 tqdm==4.67.1 av==12.3.0 numpy==1.23.3 \
-opencv-python==4.10.0.84 zarr==2.16.1 einops==0.4.1 huggingface-hub==0.25.0 \
-diffusers==0.11.1 pandas==2.0.3 numba==0.56.4 rtree==1.3.0 \
-lightning matplotlib
+python -m pip install \
+    wandb==0.12.21 dill==0.3.9 tqdm==4.67.1 av==12.3.0 numpy==1.23.3 \
+    opencv-python==4.10.0.84 zarr==2.16.1 einops==0.4.1 huggingface-hub==0.25.0 \
+    diffusers==0.11.1 pandas==2.0.3 numba==0.56.4 rtree==1.3.0 \
+    lightning matplotlib
 
 echo ""
 echo "=========================================="
-echo "Installation Complete!"
+echo "ManiFeel installation complete"
 echo "=========================================="
-echo ""
-echo "Next steps:"
-echo "1. Download IsaacGym_Preview_TacSL_Package (if not already done)"
-echo "   from: https://drive.google.com/file/d/1FHs1tf3QajvYb11UkLaLcDD9THL-C0G5/view"
-echo "2. Download ManiFeel dataset from:"
-echo "   https://purdue0-my.sharepoint.com/:f:/g/personal/luu15_purdue_edu/IgClDSeuVGAKR4nlaok2yv2QAaOTl1FiHtebNThmTxuWi5U?e=s6z0jX"
-echo "   and place it in manifeel/data/"
-echo ""
 echo "To activate the environment:"
-echo "  conda activate $CONDA_ENV_PATH"
+echo "  conda activate ${CONDA_ENV_PATH}"
 echo "  export LD_LIBRARY_PATH=\${CONDA_PREFIX}/lib:\${LD_LIBRARY_PATH}"
 echo ""
