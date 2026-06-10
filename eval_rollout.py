@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
+
+import yaml
 
 import matplotlib.pyplot as plt
 import torch
@@ -137,11 +140,22 @@ def plot_rollout_metrics(metrics: dict, save_path: Path, title: str = "Multi-ste
     print(f"[INFO] Saved rollout plot to: {save_path}")
 
 
-def parse_args():
-    parser = argparse.ArgumentParser()
+def _load_yaml_config() -> dict:
+    if "--config" in sys.argv:
+        idx = sys.argv.index("--config")
+        if idx + 1 < len(sys.argv):
+            with open(sys.argv[idx + 1]) as f:
+                return yaml.safe_load(f) or {}
+    return {}
 
-    parser.add_argument("--ckpt-path", type=str, required=True)
-    parser.add_argument("--data-root", type=str, required=True)
+
+def parse_args():
+    cfg = _load_yaml_config()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--ckpt-path", type=str, required="ckpt_path" not in cfg)
+    parser.add_argument("--data-root", type=str, required="data_root" not in cfg)
 
     parser.add_argument("--vision-key", type=str, default="wrist")
     parser.add_argument("--vision-type", type=str, default="image", choices=["image", "pc"])
@@ -197,6 +211,8 @@ def parse_args():
     parser.add_argument("--json-filename", type=str, default="rollout_metrics.json")
     parser.add_argument("--plot-title", type=str, default="Multi-step Rollout Error")
 
+    if cfg:
+        parser.set_defaults(**cfg)
     return parser.parse_args()
 
 

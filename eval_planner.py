@@ -6,7 +6,10 @@ import isaacgym
 import argparse
 import json
 import os
+import sys
 from pathlib import Path
+
+import yaml
 from typing import Optional
 
 import imageio.v2 as imageio
@@ -522,12 +525,24 @@ def save_matched_rollout_and_gt_videos(
             print(f"Saved rollout-vs-GT video to: {output_path}", flush=True)
 
 
+def _load_yaml_config() -> dict:
+    if "--config" in sys.argv:
+        idx = sys.argv.index("--config")
+        if idx + 1 < len(sys.argv):
+            with open(sys.argv[idx + 1]) as f:
+                return yaml.safe_load(f) or {}
+    return {}
+
+
 def main() -> None:
+    cfg = _load_yaml_config()
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data-root", type=str, required=True)
-    parser.add_argument("--ckpt-path", type=str, required=True)
-    parser.add_argument("--isaacgym-cfg-name", type=str, required=True)
-    parser.add_argument("--output-dir", type=str, required=True)
+    parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--data-root", type=str, required="data_root" not in cfg)
+    parser.add_argument("--ckpt-path", type=str, required="ckpt_path" not in cfg)
+    parser.add_argument("--isaacgym-cfg-name", type=str, required="isaacgym_cfg_name" not in cfg)
+    parser.add_argument("--output-dir", type=str, required="output_dir" not in cfg)
 
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--vision-key", type=str, default="front")
@@ -604,6 +619,8 @@ def main() -> None:
     parser.add_argument("--reg-on-vision-only", action="store_true")
     parser.add_argument("--stop-on-success", action="store_true")
 
+    if cfg:
+        parser.set_defaults(**cfg)
     args = parser.parse_args()
     args.output_dir = Path(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)

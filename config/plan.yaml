@@ -1,0 +1,93 @@
+# ── Paths ─────────────────────────────────────────────────────────────────────
+data_root: /home/zhiyuan/Project/TVB/data/insertion_usb
+ckpt_path: logs/ckpts/insertion_usb/front/vc/tactile_force_field_right/concat/100000.ckpt
+isaacgym_cfg_name: isaacgym_config_usb
+output_dir: logs/planning/insertion_usb/100000/step_12/front_ff
+
+# ── Device ────────────────────────────────────────────────────────────────────
+device: cuda
+
+# ── Vision ────────────────────────────────────────────────────────────────────
+vision_key: front          # front | wrist | pointcloud
+vision_type: image         # image | pc
+image_size: 224
+vision_dim: 512
+pc_in_channels: 3          # used when vision_type=pc
+
+# ── Tactile ───────────────────────────────────────────────────────────────────
+use_tactile: true
+tactile_key: tactile_force_field_right
+tactile_in_channels: 3
+tactile_height: 10
+tactile_width: 14
+tactile_dim: 64
+
+# ── Fusion ────────────────────────────────────────────────────────────────────
+fusion_type: concat        # concat | gate | film | attn
+fusion_latent_dim: null
+fusion_hidden_dim: null
+
+# ── Attention (used when fusion_type=attn) ────────────────────────────────────
+attn_d_model: 256
+attn_heads: 4
+attn_layers: 2
+attn_mlp_ratio: 4.0
+attn_dropout: 0.0
+
+# ── Regularization ────────────────────────────────────────────────────────────
+reg_loss_type: vc          # vc | sigreg
+use_proj: false
+reg_on_vision_only: true
+
+# VC loss
+cov_coeff: 1.0
+std_coeff: 1.0
+
+# SIGReg loss (used when reg_loss_type=sigreg)
+sigreg_coeff: 0.1
+sigreg_knots: 17
+sigreg_num_proj: 1024
+
+# Shared
+sim_coeff_t: 0.1
+idm_coeff: 0.1
+idm_after_proj: false
+sim_t_after_proj: false
+
+# ── Environment ───────────────────────────────────────────────────────────────
+num_envs: 100
+num_record: 6
+max_steps: 15
+seed: 42
+
+# ── Planning ──────────────────────────────────────────────────────────────────
+history_size: 1
+horizon: 6
+goal_offset_steps: 12
+candidates: 100
+topk: 8
+iterations: 4
+
+# ── CEM ───────────────────────────────────────────────────────────────────────
+use_action_prior: true
+action_prior_std_scale: 1.0
+action_prior_min_std: 0.05
+warm_start_mode: prev_action   # none | prev_action
+warm_start_std: 0.15
+warm_start_mix: 0.5
+cem_min_std: 0.03
+action_smooth_weight: 0.05
+action_magnitude_weight: 0.01
+sum_all_diffs: false
+discount: 1.0
+
+# ── Evaluation thresholds ─────────────────────────────────────────────────────
+pos_thresh: 0.01
+quat_thresh_deg: 15.0
+ee_pos_thresh: 0.01
+ee_quat_thresh_deg: 15.0
+stop_on_success: true
+
+# ── Video ─────────────────────────────────────────────────────────────────────
+fps: 10
+crf: 22

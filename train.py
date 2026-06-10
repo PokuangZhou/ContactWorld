@@ -1,5 +1,7 @@
 import argparse
+import sys
 
+import yaml
 import lightning as pl
 import torch
 import torch.nn as nn
@@ -109,10 +111,22 @@ def build_dataloaders(args):
     return dataset, train_loader, val_loader
 
 
+def _load_yaml_config() -> dict:
+    if "--config" in sys.argv:
+        idx = sys.argv.index("--config")
+        if idx + 1 < len(sys.argv):
+            with open(sys.argv[idx + 1]) as f:
+                return yaml.safe_load(f) or {}
+    return {}
+
+
 def parse_args():
+    cfg = _load_yaml_config()
+
     parser = argparse.ArgumentParser()
-    parser.add_argument("--task", type=str, required=True)
-    parser.add_argument("--data-root", type=str, required=True)
+    parser.add_argument("--config", type=str, default=None)
+    parser.add_argument("--task", type=str, required="task" not in cfg)
+    parser.add_argument("--data-root", type=str, required="data_root" not in cfg)
     parser.add_argument("--vision-key", type=str, default="wrist")
     parser.add_argument("--vision-type", type=str, default="image", choices=["image", "pc"])
 
@@ -181,7 +195,8 @@ def parse_args():
     parser.add_argument("--save-dir", type=str, default="logs/ckpts")
     parser.add_argument("--ckpt-every-n-steps", type=int, default=10000)
 
-
+    if cfg:
+        parser.set_defaults(**cfg)
     return parser.parse_args()
 
 
