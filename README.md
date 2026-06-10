@@ -1,5 +1,5 @@
 <div align="center">
-<img src="media/logo.svg" alt="ContactWorld logo" width="180" />
+<img src="media/cw_logo.gif" alt="ContactWorld logo" width="180" />
 
 <h2> ContactWorld: <br>
 What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
