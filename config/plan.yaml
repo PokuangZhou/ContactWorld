@@ -1,5 +1,5 @@
 # ── Paths ─────────────────────────────────────────────────────────────────────
-data_root: /home/zhiyuan/Project/TVB/data/insertion_usb
+data_root: /data/insertion_usb # need update with your current setting
 ckpt_path: logs/ckpts/insertion_usb/front/vc/tactile_force_field_right/concat/100000.ckpt
 isaacgym_cfg_name: isaacgym_config_usb
 output_dir: logs/planning/insertion_usb/100000/step_12/front_ff

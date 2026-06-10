@@ -67,7 +67,7 @@ ckpt_every_n_steps: 10000
 
 # ── W&B ───────────────────────────────────────────────────────────────────────
 wandb: false
-wandb_project: vt-wm
+wandb_project: contactworld
 wandb_entity: null
 wandb_save_dir: logs/wandb
 wandb_name: null

@@ -32,6 +32,7 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 - A JEPA-structured vision-tactile world model with a CEM-style planner.
 - We identify three key properties: spatial structure, temporal continuity, and cross-modal compatibility.
 - Easy-to-install, reproducible, and lightweight simulation environments based on Isaac Gym.
+- Open-source demonstration data, trained checkpoints, and evaluation tools for convenient reproduction.
 
 
 ## Easy Setup
@@ -100,41 +101,25 @@ ITERATIONS=1
 
 ## Training
 
-Main DINO front-RGB training config:
-
-```text
-config/tf/train/dino/train_dino_front_rgb.yaml
-```
-
-The test script forwards any extra arguments to `world_model_tf/train.py`, so
-you can override config values from the command line:
+Edit `config/train.yaml` to set your task, data path, and modality, then run:
 
 ```bash
-scripts/train_tf_test.sh \
-  --epochs 2 \
-  --batch-size 32 \
-  --train-num-workers 8 \
-  --val-num-workers 4
+python train.py --config config/train.yaml
 ```
+
 
 ## Planner Evaluation
 
-Planner evaluation config:
-
-```text
-config/tf/eval/dino/eval_planner_env_dino_front_rgb_smoke.yaml
-```
-
-The test script forwards extra arguments to `world_model_tf/eval_planner_env.py`:
+Edit `config/plan.yaml` to set your checkpoint path, data path, and environment, then run:
 
 ```bash
-scripts/eval_planner_tf_test.sh \
-  --num-envs 4 \
-  --max-steps 3 \
-  --candidates 8 \
-  --candidate-chunk-size 8 \
-  --topk 2 \
-  --iterations 1
+python eval_planner.py --config config/plan.yaml
+```
+
+For the sorting task:
+
+```bash
+python eval_planner_sorting.py --config config/plan.yaml
 ```
 
 ## Addtion Information
@@ -154,7 +139,7 @@ If you find our work useful, please consider citing our paper. <img src="media/c
 }
 ```
 
-Related work (Manifeel):
+Related work ([ManiFeel](https://zhengtongxu.github.io/manifeel-website/)):
 
 ```bibtex
 @article{luu2025manifeel,
