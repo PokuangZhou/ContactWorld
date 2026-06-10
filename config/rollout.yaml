@@ -1,6 +1,6 @@
 # ── Paths ─────────────────────────────────────────────────────────────────────
 ckpt_path: logs/ckpts/insertion_usb/front/vc/tactile_force_field_right/concat/100000.ckpt
-data_root: /data/insertion_usb # need update with your current setting
+data_root: data/demo_data/insertion_usb
 output_dir: rollout/front_tacff
 plot_filename: rollout_plot.png
 json_filename: rollout_metrics.json

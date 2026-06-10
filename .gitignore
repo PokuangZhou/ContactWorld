@@ -12,9 +12,11 @@ data/pretrained_model/vjepa2/*
 !data/pretrained_model/vjepa2/.gitkeep
 data/demo_data/*
 !data/demo_data/.gitkeep
+releases/
 
 # Generated logs, caches, and experiment outputs
 logs/
+lightning_logs/
 .cache/
 outputs/
 

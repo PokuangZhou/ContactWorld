@@ -1,13 +1,90 @@
 from __future__ import annotations
 
+import atexit
+import ctypes
+import os
+import shutil
+import sys
+import tempfile
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parent
+_HYDRA_TEMP_DIR = None
+
+
+def _setup_runtime_cache_dirs() -> None:
+    cache_root = REPO_ROOT / ".cache" / "eval_planner"
+    python_bin = Path(sys.prefix) / "bin"
+    if python_bin.exists():
+        os.environ["PATH"] = f"{python_bin}:{os.environ.get('PATH', '')}"
+
+    defaults = {
+        "MPLCONFIGDIR": cache_root / "matplotlib",
+        "XDG_CACHE_HOME": cache_root / "xdg",
+        "TORCH_HOME": cache_root / "torch",
+        "TORCH_EXTENSIONS_DIR": cache_root / "torch_extensions",
+    }
+    for env_name, path in defaults.items():
+        os.environ.setdefault(env_name, str(path))
+        Path(os.environ[env_name]).mkdir(parents=True, exist_ok=True)
+
+
+def _prepend_sys_path(*paths: Path) -> None:
+    for path in reversed(paths):
+        if path.exists():
+            path_str = str(path)
+            if path_str not in sys.path:
+                sys.path.insert(0, path_str)
+
+
+def _setup_local_thirdparty_paths() -> None:
+    manifeel_dir = Path(
+        os.environ.get(
+            "MANIFEEL_DIR",
+            REPO_ROOT / "thirdparty" / "manifeel" / "manifeel",
+        )
+    )
+    manifeel_isaacgym_root = Path(
+        os.environ.get(
+            "MANIFEEL_ISAACGYM_ROOT",
+            REPO_ROOT / "thirdparty" / "manifeel-isaacgymenvs",
+        )
+    )
+    isaacgym_python = Path(
+        os.environ.get(
+            "ISAACGYM_PYTHON_ROOT",
+            REPO_ROOT / "thirdparty" / "IsaacGym_Preview_TacSL_Package" / "isaacgym" / "python",
+        )
+    )
+
+    _prepend_sys_path(REPO_ROOT, manifeel_dir, manifeel_isaacgym_root, isaacgym_python)
+
+
+def _preload_python_shared_library() -> None:
+    candidates = [
+        Path(sys.prefix) / "lib" / f"libpython{sys.version_info.major}.{sys.version_info.minor}.so.1.0",
+        Path(sys.prefix) / "lib" / f"libpython{sys.version_info.major}.{sys.version_info.minor}.so",
+    ]
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        try:
+            ctypes.CDLL(str(candidate), mode=ctypes.RTLD_GLOBAL)
+            return
+        except OSError:
+            pass
+
+
+_setup_runtime_cache_dirs()
+_setup_local_thirdparty_paths()
+_preload_python_shared_library()
+
 # IsaacGym MUST be imported before torch.
 import isaacgym
 
 import argparse
 import json
-import os
-import sys
-from pathlib import Path
 
 import yaml
 from typing import Optional
@@ -20,7 +97,7 @@ import numpy as np
 
 import torch
 
-from hydra import compose, initialize
+from hydra import compose, initialize_config_dir
 from hydra.core.global_hydra import GlobalHydra
 from omegaconf import OmegaConf
 
@@ -34,6 +111,61 @@ from planner_utils import (
     load_lightning_ckpt,
     update_history_buffers,
 )
+
+
+def _link_path(src: Path, dst: Path) -> None:
+    if dst.exists() or dst.is_symlink():
+        return
+    try:
+        os.symlink(src, dst, target_is_directory=src.is_dir())
+    except OSError:
+        if src.is_dir():
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+
+
+def _get_hydra_config_root() -> str:
+    global _HYDRA_TEMP_DIR
+
+    if _HYDRA_TEMP_DIR is not None:
+        return _HYDRA_TEMP_DIR.name
+
+    repo_config_dir = REPO_ROOT / "config"
+    manifeel_dir = Path(
+        os.environ.get(
+            "MANIFEEL_DIR",
+            REPO_ROOT / "thirdparty" / "manifeel" / "manifeel",
+        )
+    )
+    manifeel_config_dir = Path(
+        os.environ.get("MANIFEEL_CONFIG_DIR", manifeel_dir / "config")
+    )
+    manifeel_assets_dir = Path(
+        os.environ.get(
+            "MANIFEEL_ASSETS_DIR",
+            REPO_ROOT / "thirdparty" / "manifeel" / "assets",
+        )
+    )
+
+    if not manifeel_config_dir.exists():
+        raise FileNotFoundError(f"ManiFeel config directory not found: {manifeel_config_dir}")
+    if not manifeel_assets_dir.exists():
+        raise FileNotFoundError(f"ManiFeel assets directory not found: {manifeel_assets_dir}")
+
+    _HYDRA_TEMP_DIR = tempfile.TemporaryDirectory(prefix="contactworld_hydra_")
+    atexit.register(_HYDRA_TEMP_DIR.cleanup)
+    hydra_root = Path(_HYDRA_TEMP_DIR.name)
+
+    if repo_config_dir.exists():
+        for yaml_file in repo_config_dir.glob("*.yaml"):
+            _link_path(yaml_file, hydra_root / yaml_file.name)
+    for yaml_file in manifeel_config_dir.glob("*.yaml"):
+        _link_path(yaml_file, hydra_root / yaml_file.name)
+    _link_path(manifeel_config_dir / "task", hydra_root / "task")
+    _link_path(manifeel_assets_dir, hydra_root / "assets")
+
+    return str(hydra_root)
 
 
 def is_rgb_like_key(key: str) -> bool:
@@ -104,7 +236,7 @@ def sample_init_goal_segments(
 
 def make_env(args) -> MultipleIsaacEnvWrapper:
     if not GlobalHydra.instance().is_initialized():
-        initialize(config_path="config", version_base="1.1")
+        initialize_config_dir(config_dir=_get_hydra_config_root(), version_base="1.1")
 
     cfg = compose(config_name=args.isaacgym_cfg_name)
     cfg.num_envs = args.num_envs

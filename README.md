@@ -70,47 +70,44 @@ ContactWorld/
 
 ## Quick Tests
 
-Run a training smoke test. By default this uses the full demo dataset but only
-runs Lightning's sanity-check path (`EPOCHS=0`):
+Run a training smoke test. This downloads the USB insertion demo data if needed
+and trains the front-camera + tactile-force-field model for 3 epochs:
 
 ```bash
-scripts/train_tf_test.sh
+bash smoke_test_train.sh
 ```
 
-Run one actual minimal training epoch:
+You can override the smoke-test defaults from the shell:
 
 ```bash
-EPOCHS=1 BATCH_SIZE=32 scripts/train_tf_test.sh
+EPOCHS=1 BATCH_SIZE=32 NUM_WORKERS=0 bash smoke_test_train.sh
 ```
 
-Run a minimal planner evaluation in IsaacGym:
+Run a minimal planner evaluation in IsaacGym. This downloads the USB insertion
+demo data and pretrained checkpoint if needed, then uses
+`config/plan.yaml` with a small planner setting:
 
 ```bash
-scripts/eval_planner_tf_test.sh
-```
-
-The planner smoke test defaults to a very small setting:
-
-```text
-NUM_ENVS=2
-MAX_STEPS=1
-CANDIDATES=4
-TOPK=2
-ITERATIONS=1
+bash smoke_test_plan.sh
 ```
 
 ## Training
 
-Edit `config/train.yaml` to set your task, data path, and modality, then run:
+Edit `config/train.yaml` to set your task, data path, and modality. Before
+running from the repository root, expose the local ManiFeel dataset package:
 
 ```bash
+export PYTHONPATH=$PWD/thirdparty/manifeel/manifeel:$PYTHONPATH
 python train.py --config config/train.yaml
 ```
 
 
 ## Planner Evaluation
 
-Edit `config/plan.yaml` to set your checkpoint path, data path, and environment, then run:
+Edit `config/plan.yaml` to set your checkpoint path, data path, and environment.
+`eval_planner.py` automatically adds the local ManiFeel/IsaacGym source paths
+and prepares the ManiFeel Hydra configs/assets at runtime, so from the repository
+root you can run:
 
 ```bash
 python eval_planner.py --config config/plan.yaml
@@ -121,6 +118,9 @@ For the sorting task:
 ```bash
 python eval_planner_sorting.py --config config/plan.yaml
 ```
+
+For a first check with downloaded USB data and a pretrained checkpoint, use
+`bash smoke_test_plan.sh`.
 
 ## Addtion Information
 ContactWorld/eval_planner_dy.py is for dynamic-horizon, and current default is fixed

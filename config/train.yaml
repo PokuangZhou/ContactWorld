@@ -1,6 +1,6 @@
 # ── Data ──────────────────────────────────────────────────────────────────────
 task: insertion_usb
-data_root: data/insertion_usb
+data_root: data/demo_data/insertion_usb
 
 # ── Training ──────────────────────────────────────────────────────────────────
 epochs: 560
