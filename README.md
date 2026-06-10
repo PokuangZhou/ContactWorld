@@ -47,7 +47,7 @@ This installation requires [mamba](https://mamba.readthedocs.io/en/latest/instal
 bash install_cw.sh
 ```
 
-## demo data and checkpoint download link
+## Demo Data and Checkpoint Download Link
 💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main)
 
 how to use those data please refer to [data helper](extract_dataset_ckpts_addto_README.md) 

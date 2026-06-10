@@ -29,6 +29,12 @@ config/example/wm_bash/planning/exploration_search/
 config/example/wm_bash/planning/screwing_bulb/
 config/example/wm_bash/planning/screwing_nut/
 config/example/wm_bash/planning/insertion_usb/dy/
+config/example/wm_bash/training/disassembly_barbed_spike/
+config/example/wm_bash/training/disassembly_lidded_loose/
+config/example/wm_bash/training/exploration_search/
+config/example/wm_bash/training/insertion_peg/
+config/example/wm_bash/training/insertion_power/
+config/example/wm_bash/training/screwing_nut/
 
 # Third-party repositories and SDKs
 thirdparty/*
