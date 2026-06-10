@@ -11,7 +11,7 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 </div>
 
 <p align="center">
-<a href="https://github.com/ZhangZhiyuanZhang?tab=repositories">Zhiyuan Zhang</a>*,
+<a href="https://zhangzhiyuanzhang.github.io/personal_website/">Zhiyuan Zhang</a>*,
 <a href="https://pokuangzhou.github.io/website/">Pokuang Zhou</a>*,
 <a href="https://aaronzkd.github.io/KaidiZhang.web/">Kaidi Zhang</a>,
 <a href="https://scholar.google.com/citations?user=A880yg0AAAAJ&hl=en&oi=ao">Adeesh Desai</a>,
