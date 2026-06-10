@@ -22,6 +22,12 @@ outputs/
 config/tf/
 world_model_tf/
 
+# Large/generated example planning configs
+config/example/wm_bash/planning/exploration_search/
+config/example/wm_bash/planning/screwing_bulb/
+config/example/wm_bash/planning/screwing_nut/
+config/example/wm_bash/planning/insertion_usb/dy/
+
 # Third-party repositories and SDKs
 thirdparty/*
 !thirdparty/.gitkeep

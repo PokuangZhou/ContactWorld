@@ -1,18 +1,34 @@
 ## Download and Extract
 
+USB insertion example:
+
+- Collected data: [insertion_usb_dataset.tar.gz](https://huggingface.co/datasets/Pokuang/ContactWorld/blob/main/releases/insertion_usb_dataset.tar.gz)
+- Pretrained checkpoint: [insertion_usb_ckpt.tar.gz](https://huggingface.co/datasets/Pokuang/ContactWorld/blob/main/releases/insertion_usb_ckpt.tar.gz)
+
+Download the archives:
+
+```bash
+mkdir -p releases
+wget -O releases/insertion_usb_dataset.tar.gz \
+  https://huggingface.co/datasets/Pokuang/ContactWorld/resolve/main/releases/insertion_usb_dataset.tar.gz
+wget -O releases/insertion_usb_ckpt.tar.gz \
+  https://huggingface.co/datasets/Pokuang/ContactWorld/resolve/main/releases/insertion_usb_ckpt.tar.gz
+```
+
 ### Dataset
 
 Extract datasets into the `data/` directory:
 
 ```bash
-tar -xzf releases/disassembly_barbed_flat_dataset.tar.gz -C data/demo_data
+mkdir -p data/demo_data
+tar -xzf releases/insertion_usb_dataset.tar.gz -C data/demo_data
 ```
 
 This will create:
 
 ```text
 data/demo_data/
-└── disassembly_barbed_flat/
+└── insertion_usb/
 ```
 
 ### Checkpoint
@@ -21,7 +37,7 @@ Extract checkpoints into the `logs/ckpts/` directory:
 
 ```bash
 mkdir -p logs/ckpts
-tar -xzf releases/disassembly_barbed_flat_ckpt.tar.gz -C logs/ckpts
+tar -xzf releases/insertion_usb_ckpt.tar.gz -C logs/ckpts
 ```
 
 This will create:
@@ -29,7 +45,7 @@ This will create:
 ```text
 logs/
 └── ckpts/
-    └── disassembly_barbed_flat/
+    └── insertion_usb/
 ```
 
 The dataset and checkpoint archives contain directories with the same name and therefore should be extracted into their corresponding target locations (`data/` and `logs/ckpts/`).
