@@ -1,0 +1,11 @@
+python eval_rollout.py \
+  --ckpt-path logs/ckpts/insertion_usb/pointcloud/vc/only/100000.ckpt \
+  --data-root data/demo_data/insertion_usb \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --max-rollout 6 \
+  --action-mode all \
+  --output-dir logs/rollout/pc

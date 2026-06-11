@@ -1,0 +1,19 @@
+python eval_planner_sorting.py \
+  --data-root data/demo_data/exploration_sorting_dim \
+  --ckpt-path logs/ckpts/exploration_sorting_dim/pointcloud/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_sorting_dim \
+  --output-dir logs/planning/exploration_sorting_dim/100000/step_36/pc \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 36 \
+  --max-steps 45 \
+  --stop-on-success

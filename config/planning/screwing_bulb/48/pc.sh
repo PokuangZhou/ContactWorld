@@ -1,0 +1,20 @@
+python eval_planner.py \
+  --data-root data/demo_data/screwing_bulb \
+  --ckpt-path logs/ckpts/screwing_bulb/pointcloud/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_bulb \
+  --output-dir logs/planning/screwing_bulb/100000/step_48/pc \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 0 \
+  --goal-offset-steps 48 \
+  --max-steps 60 \
+  --quat-thresh-deg 5 \
+  --stop-on-success

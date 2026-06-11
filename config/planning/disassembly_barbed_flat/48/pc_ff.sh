@@ -1,0 +1,26 @@
+python eval_planner.py \
+  --data-root data/demo_data/disassembly_barbed_flat \
+  --ckpt-path logs/ckpts/disassembly_barbed_flat/pointcloud/vc/tactile_force_field_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_barbed_flat \
+  --output-dir logs/planning/disassembly_barbed_flat/100000/step_48/pc_ff \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 60 \
+  --goal-offset-steps 48 \
+  --max-steps 60 \

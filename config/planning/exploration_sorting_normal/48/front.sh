@@ -1,0 +1,19 @@
+python eval_planner_sorting.py \
+  --data-root data/demo_data/exploration_sorting_normal \
+  --ckpt-path logs/ckpts/exploration_sorting_normal/front/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_sorting_normal \
+  --output-dir logs/planning/exploration_sorting_normal/100000/step_48/front \
+  --vision-key front \
+  --vision-type image \
+  --image-size 224 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 48 \
+  --max-steps 60 \
+  --stop-on-success

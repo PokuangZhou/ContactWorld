@@ -113,6 +113,7 @@ from planner_utils import (
 )
 
 
+
 def _link_path(src: Path, dst: Path) -> None:
     if dst.exists() or dst.is_symlink():
         return
@@ -166,7 +167,6 @@ def _get_hydra_config_root() -> str:
     _link_path(manifeel_assets_dir, hydra_root / "assets")
 
     return str(hydra_root)
-
 
 def is_rgb_like_key(key: str) -> bool:
     key = key.lower()
@@ -353,13 +353,99 @@ def _to_hwc_rgb(frame: np.ndarray) -> np.ndarray:
     return np.clip(frame, 0, 255).astype(np.uint8)
 
 
-def _depth_to_rgb(frame: np.ndarray, vmin=None, vmax=None) -> np.ndarray:
+def _depth_to_rgb(
+    frame: np.ndarray,
+    vmin=None,
+    vmax=None,
+    invert: bool = False,
+    bg_value: float = 0.0,
+    smooth_sigma: float = 1.0,
+    alpha_sigma=None,
+    gamma: float = 0.0,
+    alpha_gamma: float = 0.5,
+    cool_tone: bool = True,
+) -> np.ndarray:
+    """
+    Same tactile-depth visualization as vis_modalities.py:
+        black background + soft white/cool-white deformation.
+
+    Default parameters match the paper export setting:
+        smooth_sigma=1.0, gamma=0.0, alpha_gamma=0.5, cool_tone=True
+    """
+    import cv2
+
     frame = np.asarray(frame, dtype=np.float32)
+
     if frame.ndim == 3:
         if frame.shape[0] == 1:
             frame = frame[0]
         elif frame.shape[-1] == 1:
             frame = frame[..., 0]
+
+    depth = np.clip(frame, 0.0, 1.0)
+
+    if alpha_sigma is None:
+        alpha_sigma = smooth_sigma * 1.5
+
+    if smooth_sigma is not None and smooth_sigma > 0:
+        depth_smooth = cv2.GaussianBlur(
+            depth,
+            ksize=(0, 0),
+            sigmaX=smooth_sigma,
+            sigmaY=smooth_sigma,
+        )
+    else:
+        depth_smooth = depth
+
+    if vmin is None or vmax is None:
+        valid = depth[depth > bg_value + 1e-6]
+        if valid.size > 0:
+            if vmin is None:
+                vmin = float(np.percentile(valid, 2))
+            if vmax is None:
+                vmax = float(np.percentile(valid, 98))
+        else:
+            vmin = 0.0 if vmin is None else vmin
+            vmax = 1.0 if vmax is None else vmax
+
+    if vmax <= vmin + 1e-8:
+        vmin, vmax = 0.0, 1.0
+
+    norm = (depth_smooth - vmin) / (vmax - vmin + 1e-8)
+    norm = np.clip(norm, 0.0, 1.0)
+
+    if invert:
+        norm = 1.0 - norm
+
+    intensity_norm = norm ** gamma
+
+    alpha = norm.copy()
+    if alpha_sigma is not None and alpha_sigma > 0:
+        alpha = cv2.GaussianBlur(
+            alpha,
+            ksize=(0, 0),
+            sigmaX=alpha_sigma,
+            sigmaY=alpha_sigma,
+        )
+    alpha = np.clip(alpha, 0.0, 1.0)
+    alpha = alpha ** alpha_gamma
+
+    intensity = intensity_norm * 255.0
+
+    if cool_tone:
+        r = intensity * 0.92
+        g = intensity * 0.95
+        b = intensity * 1.00
+    else:
+        r = intensity
+        g = intensity
+        b = intensity
+
+    vis = np.stack([r, g, b], axis=-1)
+    vis = vis * alpha[..., None]
+
+    return np.clip(vis, 0, 255).astype(np.uint8)
+
 
     if vmin is None:
         vmin = float(np.nanmin(frame))
@@ -372,8 +458,30 @@ def _depth_to_rgb(frame: np.ndarray, vmin=None, vmax=None) -> np.ndarray:
     return (rgb * 255).astype(np.uint8)
 
 
-def _tacff_to_rgb(frame: np.ndarray, mag_max=None) -> np.ndarray:
+def _tacff_to_rgb(
+    frame: np.ndarray,
+    mag_max=None,
+    normal_max=None,
+    transpose_hw: bool = True,
+    arrow_scale: float = 0.0008,
+    resolution: int = 128,
+    contact_percentile: float = 40,
+) -> np.ndarray:
+    """
+    Same tactile-force-field visualization as vis_modalities.py.
+
+    Correct channel convention:
+        frame[..., 0] = fz / indentation / normal force
+        frame[..., 1] = fx
+        frame[..., 2] = fy
+
+    Visualization:
+        color = fz, green -> red
+        arrow = (fx, fy)
+        layout = transpose H/W for display by default
+    """
     frame = np.asarray(frame, dtype=np.float32)
+
     if frame.ndim == 3 and frame.shape[0] == 3:
         frame = np.moveaxis(frame, 0, -1)
 
@@ -381,20 +489,133 @@ def _tacff_to_rgb(frame: np.ndarray, mag_max=None) -> np.ndarray:
         f"Expected TacFF frame [H,W,3] or [3,H,W], got {frame.shape}"
     )
 
+    if transpose_hw:
+        frame = np.transpose(frame, (1, 0, 2))
+
+    h, w = frame.shape[:2]
+    x_grid, y_grid = np.meshgrid(np.arange(w), np.arange(h))
+
+    # verified convention: [fz, fx, fy]
+    fz = np.abs(frame[..., 0])
+    fx = frame[..., 1]
+    fy = frame[..., 2]
+
+    # only draw arrows in contact-ish area, as in vis_modalities.py
+    contact_thr = np.nanpercentile(fz, contact_percentile)
+    mask = fz >= contact_thr
+
+    fx_vis = fx.copy()
+    fy_vis = fy.copy()
+    fx_vis[~mask] = 0.0
+    fy_vis[~mask] = 0.0
+
+    if normal_max is None:
+        normal_max = float(np.nanpercentile(fz, 98)) + 1e-8
+
+    contact = np.clip(fz / normal_max, 0.0, 1.0)
+
+    colors = np.zeros((h, w, 4), dtype=np.float32)
+    colors[..., 0] = contact
+    colors[..., 1] = 1.0 - contact
+    colors[..., 2] = 0.0
+    colors[..., 3] = np.where(mask, 1.0, 0.25)
+
+    # Keep the same paper/export aspect from vis_modalities.py.
+    target_aspect = 4.0 / 3.0  # width / height
+    fig_h = h * resolution / 100
+    fig_w = fig_h * target_aspect
+
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=100)
+    fig.patch.set_facecolor("black")
+    ax.set_facecolor("black")
+
+    # background taxel dots
+    dot_colors = np.zeros((h, w, 4), dtype=np.float32)
+    dot_colors[..., 0] = contact * 0.7
+    dot_colors[..., 1] = (1.0 - contact) * 0.95
+    dot_colors[..., 2] = 0.0
+    dot_colors[..., 3] = 0.75
+
+    ax.scatter(
+        x_grid,
+        y_grid,
+        s=30,
+        c=dot_colors.reshape(-1, 4),
+        linewidths=0,
+    )
+
+    ax.quiver(
+        x_grid,
+        y_grid,
+        fx_vis,
+        fy_vis,
+        color=colors.reshape(-1, 4),
+        angles="xy",
+        scale_units="xy",
+        scale=arrow_scale,
+        width=0.008,
+        headwidth=5.5,
+        headlength=7.5,
+        headaxislength=6.0,
+        pivot="tail",
+    )
+
+    ax.set_xlim(-0.5, w - 0.5)
+    ax.set_ylim(h - 0.5, -0.5)
+    ax.set_aspect("equal")
+    ax.axis("off")
+
+    plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
+
+    fig.canvas.draw()
+    img = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
+    img = img.reshape(fig.canvas.get_width_height()[::-1] + (4,))[..., :3]
+    plt.close(fig)
+
+    return img
+
+
+    if frame.ndim == 3 and frame.shape[0] == 3:
+        frame = np.moveaxis(frame, 0, -1)
+
+    assert frame.ndim == 3 and frame.shape[-1] == 3, (
+        f"Expected TacFF frame [H,W,3] or [3,H,W], got {frame.shape}"
+    )
+
+    # [H,W,3] -> [W,H,3], 让 10x14 变成 14x10 竖版
+    if transpose_hw:
+        frame = np.transpose(frame, (1, 0, 2))
+
     h, w, _ = frame.shape
+    x_grid, y_grid = np.meshgrid(np.arange(w), np.arange(h))
+
     fx = frame[..., 0]
     fy = frame[..., 1]
-    mag = np.linalg.norm(frame, axis=-1)
+    fz = np.abs(frame[..., 2])
+
+    shear_mag = np.sqrt(fx ** 2 + fy ** 2)
 
     if mag_max is None:
-        mag_max = float(np.max(mag)) + 1e-8
+        mag_max = float(np.nanmax(shear_mag)) + 1e-8
+    if normal_max is None:
+        normal_max = float(np.nanmax(fz)) + 1e-8
 
-    norm_mag = np.clip(mag / mag_max, 0.0, 1.0)
-    x = np.arange(w)
-    y = np.arange(h)
-    x_grid, y_grid = np.meshgrid(x, y)
+    shear_norm = np.clip(shear_mag / mag_max, 0.0, 1.0)
 
-    fig, ax = plt.subplots(figsize=(w * 0.4, h * 0.4), dpi=100)
+    # 用 percentile 避免 normal_max 被离群值拉大
+    normal_ref = np.percentile(fz, 95) + 1e-8
+    contact = np.clip(fz / normal_ref, 0.0, 1.0)
+
+    colors = np.zeros((h, w, 4), dtype=np.float32)
+    colors[..., 0] = contact
+    colors[..., 1] = 1.0 - 0.4 * contact
+    colors[..., 2] = 0.0
+    colors[..., 3] = 1.0
+
+    fig_w = w * resolution / 100
+    fig_h = h * resolution / 100
+
+    fig, ax = plt.subplots(figsize=(fig_w, fig_h), dpi=100)
     fig.patch.set_facecolor("black")
     ax.set_facecolor("black")
 
@@ -403,32 +624,29 @@ def _tacff_to_rgb(frame: np.ndarray, mag_max=None) -> np.ndarray:
         y_grid,
         fx,
         -fy,
-        norm_mag,
-        cmap="RdYlGn_r",
-        clim=(0.0, 1.0),
+        color=colors.reshape(-1, 4),
         angles="xy",
         scale_units="xy",
         scale=0.001,
         width=0.01,
+        headwidth=3.0,
+        headlength=5.0,
+        headaxislength=4.5,
         pivot="middle",
     )
 
-    ax.set_xticks(np.arange(w))
-    ax.set_yticks(np.arange(h))
     ax.set_xlim(-0.5, w - 0.5)
     ax.set_ylim(h - 0.5, -0.5)
     ax.set_aspect("equal")
-    ax.grid(color="gray", linestyle="--", linewidth=0.4, alpha=0.35)
-    ax.tick_params(colors="white", labelsize=8)
+    ax.axis("off")
 
-    for spine in ax.spines.values():
-        spine.set_color("white")
+    plt.subplots_adjust(left=0, right=1, bottom=0, top=1)
 
-    plt.tight_layout()
     fig.canvas.draw()
     img = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
     img = img.reshape(fig.canvas.get_width_height()[::-1] + (4,))[..., :3]
     plt.close(fig)
+
     return img
 
 
@@ -548,6 +766,88 @@ def render_modality_frames(seq: np.ndarray, vis_type: str):
 
     if vis_type == "depth":
         data = seq.astype(np.float32)
+
+        # Same global normalization as vis_modalities.py: use valid non-background depth.
+        valid_vals = []
+        for t in range(data.shape[0]):
+            d = np.asarray(data[t], dtype=np.float32)
+            if d.ndim == 3:
+                if d.shape[0] == 1:
+                    d = d[0]
+                elif d.shape[-1] == 1:
+                    d = d[..., 0]
+            d = np.clip(d, 0.0, 1.0)
+            valid = d[d > 1e-6]
+            if valid.size > 0:
+                valid_vals.append(valid)
+
+        if len(valid_vals) > 0:
+            all_valid = np.concatenate(valid_vals, axis=0)
+            vmin = float(np.percentile(all_valid, 2))
+            vmax = float(np.percentile(all_valid, 98))
+        else:
+            vmin, vmax = 0.0, 1.0
+
+        if vmax <= vmin + 1e-8:
+            vmin, vmax = 0.0, 1.0
+
+        for t in range(seq.shape[0]):
+            frames.append(
+                _depth_to_rgb(
+                    seq[t],
+                    vmin=vmin,
+                    vmax=vmax,
+                    invert=False,
+                    smooth_sigma=1.0,
+                    gamma=0.0,
+                    alpha_gamma=0.5,
+                    cool_tone=True,
+                )
+            )
+
+    elif vis_type == "tacff":
+        data = seq.astype(np.float32)
+
+        if data.ndim == 4 and data.shape[1] == 3:
+            data_hwc = np.moveaxis(data, 1, -1)
+        else:
+            data_hwc = data
+
+        if data_hwc.shape[-1] != 3:
+            raise ValueError(f"Expected tacff seq [...,3], got {data_hwc.shape}")
+
+        # Same global normalization as vis_modalities.py, with correct [fz, fx, fy].
+        transpose_hw = True
+        data_for_scale = np.transpose(data_hwc, (0, 2, 1, 3)) if transpose_hw else data_hwc
+        fz_all = np.abs(data_for_scale[..., 0])
+        normal_max = float(np.nanpercentile(fz_all, 98)) + 1e-8
+
+        for t in range(seq.shape[0]):
+            frames.append(
+                _tacff_to_rgb(
+                    seq[t],
+                    normal_max=normal_max,
+                    transpose_hw=transpose_hw,
+                    arrow_scale=0.0008,
+                    resolution=128,
+                    contact_percentile=40,
+                )
+            )
+
+    elif vis_type == "pc":
+        xyz_lims = _compute_pc_lims(seq, percentile=2.0, zoom=1.0)
+        for t in range(seq.shape[0]):
+            frames.append(_pc_to_rgb(seq[t], xyz_lims=xyz_lims))
+
+    else:
+        for t in range(seq.shape[0]):
+            frames.append(_to_hwc_rgb(seq[t]))
+
+    return frames
+
+
+    if vis_type == "depth":
+        data = seq.astype(np.float32)
         vmin = float(np.nanmin(data))
         vmax = float(np.nanmax(data))
         for t in range(seq.shape[0]):
@@ -555,13 +855,35 @@ def render_modality_frames(seq: np.ndarray, vis_type: str):
 
     elif vis_type == "tacff":
         data = seq.astype(np.float32)
+
         if data.ndim == 4 and data.shape[1] == 3:
             data_hwc = np.moveaxis(data, 1, -1)
         else:
             data_hwc = data
-        mag_max = float(np.max(np.linalg.norm(data_hwc, axis=-1))) + 1e-8
+
+        if data_hwc.shape[-1] != 3:
+            raise ValueError(f"Expected tacff seq [...,3], got {data_hwc.shape}")
+
+        # 对应 _tacff_to_rgb 里的 transpose
+        data_for_scale = np.transpose(data_hwc, (0, 2, 1, 3))
+
+        shear_mag_all = np.linalg.norm(data_for_scale[..., :2], axis=-1)
+        normal_all = np.abs(data_for_scale[..., 2])
+
+        mag_max = float(np.nanmax(shear_mag_all)) + 1e-8
+        normal_max = float(np.nanmax(normal_all)) + 1e-8
+
         for t in range(seq.shape[0]):
-            frames.append(_tacff_to_rgb(seq[t], mag_max=mag_max))
+            frames.append(
+                _tacff_to_rgb(
+                    seq[t],
+                    mag_max=mag_max,
+                    normal_max=normal_max,
+                    transpose_hw=True,
+                    arrow_scale=0.001,
+                    resolution=32,
+                )
+            )
 
     elif vis_type == "pc":
         xyz_lims = _compute_pc_lims(seq, percentile=2.0, zoom=1.0)
@@ -657,6 +979,7 @@ def save_matched_rollout_and_gt_videos(
             print(f"Saved rollout-vs-GT video to: {output_path}", flush=True)
 
 
+
 def _load_yaml_config() -> dict:
     if "--config" in sys.argv:
         idx = sys.argv.index("--config")
@@ -664,7 +987,6 @@ def _load_yaml_config() -> dict:
             with open(sys.argv[idx + 1]) as f:
                 return yaml.safe_load(f) or {}
     return {}
-
 
 def main() -> None:
     cfg = _load_yaml_config()
@@ -773,6 +1095,11 @@ def main() -> None:
         "ee_pos",
         "ee_quat",
     ]
+
+
+    if args.vision_type == "pc" and "front" not in keys_to_load:
+        keys_to_load.append("front")
+
     if args.use_tactile:
         keys_to_load.append(args.tactile_key)
 
@@ -891,6 +1218,10 @@ def main() -> None:
     obs, _, _, _ = env.step(zero_action)
 
     modality_video_keys = [args.vision_key]
+
+    if args.vision_type == "pc" and "front" not in modality_video_keys:
+        modality_video_keys.append("front")
+
     if args.use_tactile:
         modality_video_keys.append(args.tactile_key)
 
@@ -933,6 +1264,21 @@ def main() -> None:
         if args.stop_on_success:
             action_np = action_np.copy()
             action_np[done_mask] = 0.0
+
+
+        if action_dim > 6:
+            ep_ids = batch["episode_idx"]
+            local_steps = batch["start_step"] + step_idx
+
+            max_local_steps = dataset.lengths[ep_ids] - 1
+            local_steps = np.minimum(local_steps, max_local_steps)
+
+            gt_action_rows = dataset.offsets[ep_ids] + local_steps
+            gt_actions_step = np.asarray(dataset.get_col_data("action")[gt_action_rows], dtype=np.float32)
+
+            active_mask = ~done_mask if args.stop_on_success else np.ones(args.num_envs, dtype=bool)
+            action_np[active_mask, 6] = gt_actions_step[active_mask, 6]
+
 
         obs, _, _, _ = env.step(action_np)
         prev_action = action_np.copy()

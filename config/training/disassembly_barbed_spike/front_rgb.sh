@@ -1,0 +1,16 @@
+python train.py \
+  --data-root data/demo_data/disassembly_barbed_spike \
+  --task disassembly_barbed_spike \
+  --vision-key front \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_rgb_right \
+  --tactile-in-channels 3 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --batch-size 64 \
+  --epochs 550

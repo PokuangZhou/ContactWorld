@@ -1,0 +1,19 @@
+python eval_planner.py \
+  --data-root data/demo_data/insertion_usb \
+  --ckpt-path logs/ckpts/insertion_usb/pointcloud/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_usb \
+  --output-dir logs/planning/insertion_usb/100000/step_12/pc \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 12 \
+  --max-steps 15 \
+  --stop-on-success

@@ -1,0 +1,19 @@
+python eval_rollout.py \
+  --ckpt-path logs/ckpts/insertion_usb/wrist/vc/tactile_force_field_right/concat/100000.ckpt \
+  --data-root data/demo_data/insertion_usb \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --max-rollout 6 \
+  --action-mode all \
+  --output-dir logs/rollout/wrist_tacff

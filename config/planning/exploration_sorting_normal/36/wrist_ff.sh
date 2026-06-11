@@ -1,0 +1,27 @@
+python eval_planner_sorting.py \
+  --data-root data/demo_data/exploration_sorting_normal \
+  --ckpt-path logs/ckpts/exploration_sorting_normal/wrist/vc/tactile_force_field_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_sorting_normal \
+  --output-dir logs/planning/exploration_sorting_normal/100000/step_36/wrist_ff \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 36 \
+  --max-steps 45 \
+  --stop-on-success

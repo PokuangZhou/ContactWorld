@@ -1,0 +1,28 @@
+python eval_planner.py \
+  --data-root data/demo_data/screwing_bulb \
+  --ckpt-path logs/ckpts/screwing_bulb/front/vc/tactile_force_field_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_bulb \
+  --output-dir logs/planning/screwing_bulb/100000/step_24/front_ff \
+  --vision-key front \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 24 \
+  --max-steps 30 \
+  --quat-thresh-deg 5 \
+  --stop-on-success

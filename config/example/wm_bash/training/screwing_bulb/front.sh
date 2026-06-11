@@ -1,9 +1,0 @@
-python train.py \
-  --data-root ../data/bulb_0423_100 \
-  --task screwing_bulb \
-  --vision-key front \
-  --vision-type image \
-  --image-size 224 \
-  --reg-loss-type vc \
-  --batch-size 64 \
-  --epochs 160 \

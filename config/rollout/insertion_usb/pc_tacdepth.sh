@@ -1,0 +1,18 @@
+python eval_rollout.py \
+  --ckpt-path logs/ckpts/insertion_usb/pointcloud/vc/tactile_depth_right/concat/100000.ckpt \
+  --data-root data/demo_data/insertion_usb \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_depth_right \
+  --tactile-in-channels 1 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --max-rollout 6 \
+  --action-mode all \
+  --output-dir logs/rollout/pc_tacdepth

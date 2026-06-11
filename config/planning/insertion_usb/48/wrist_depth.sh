@@ -1,0 +1,26 @@
+python eval_planner.py \
+  --data-root data/demo_data/insertion_usb \
+  --ckpt-path logs/ckpts/insertion_usb/wrist/vc/tactile_depth_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_usb \
+  --output-dir logs/planning/insertion_usb/100000/step_48/wrist_depth \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_depth_right \
+  --tactile-in-channels 1 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 48 \
+  --max-steps 60 \
+  --stop-on-success

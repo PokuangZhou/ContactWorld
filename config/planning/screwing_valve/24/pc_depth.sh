@@ -1,0 +1,27 @@
+python eval_planner.py \
+  --data-root data/demo_data/screwing_valve \
+  --ckpt-path logs/ckpts/screwing_valve/pointcloud/vc/tactile_depth_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_valve \
+  --output-dir logs/planning/screwing_valve/100000/step_24/pc_depth \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_depth_right \
+  --tactile-in-channels 1 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 24 \
+  --max-steps 30 \
+  --quat-thresh-deg 5 \
+  --stop-on-success

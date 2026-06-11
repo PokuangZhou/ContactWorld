@@ -1,0 +1,26 @@
+python eval_planner_sorting.py \
+  --data-root data/demo_data/exploration_sorting_dim \
+  --ckpt-path logs/ckpts/exploration_sorting_dim/pointcloud/vc/tactile_depth_right/concat/last.ckpt \
+  --isaacgym-cfg-name isaacgym_config_sorting_dim \
+  --output-dir logs/planning/exploration_sorting_dim/last/step_36/pc_depth \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_depth_right \
+  --tactile-in-channels 1 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 36 \
+  --max-steps 45 \
+  --stop-on-success

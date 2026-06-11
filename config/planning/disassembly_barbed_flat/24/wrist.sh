@@ -1,0 +1,19 @@
+python eval_planner.py \
+  --data-root data/demo_data/disassembly_barbed_flat \
+  --ckpt-path logs/ckpts/disassembly_barbed_flat/wrist/vc/only/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_barbed_flat \
+  --output-dir logs/planning/disassembly_barbed_flat/100000/step_24/wrist \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 24 \
+  --max-steps 30 \
+  --stop-on-success

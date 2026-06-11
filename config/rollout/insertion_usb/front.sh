@@ -1,0 +1,11 @@
+python eval_rollout.py \
+  --ckpt-path logs/ckpts/insertion_usb/front/vc/only/100000.ckpt \
+  --data-root data/demo_data/insertion_usb \
+  --vision-key front \
+  --vision-type image \
+  --image-size 224 \
+  --reg-loss-type vc \
+  --history-size 1 \
+  --max-rollout 6 \
+  --action-mode all \
+  --output-dir logs/rollout/front

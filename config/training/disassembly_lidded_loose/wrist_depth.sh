@@ -1,0 +1,16 @@
+python train.py \
+  --data-root data/demo_data/disassembly_lidded_loose \
+  --task disassembly_lidded_loose \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_depth_right \
+  --tactile-in-channels 1 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --batch-size 64 \
+  --epochs 415

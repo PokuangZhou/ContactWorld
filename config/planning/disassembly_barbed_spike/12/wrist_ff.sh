@@ -1,0 +1,27 @@
+python eval_planner.py \
+  --data-root data/demo_data/disassembly_barbed_spike \
+  --ckpt-path logs/ckpts/disassembly_barbed_spike/wrist/vc/tactile_force_field_right/concat/100000.ckpt \
+  --isaacgym-cfg-name isaacgym_config_barbed_spike \
+  --output-dir logs/planning/disassembly_barbed_spike/100000/step_12/wrist_ff \
+  --vision-key wrist \
+  --vision-type image \
+  --image-size 224 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --history-size 1 \
+  --horizon 6 \
+  --candidates 100 \
+  --topk 8 \
+  --iterations 4 \
+  --num-envs 100 \
+  --num-record 6 \
+  --goal-offset-steps 12 \
+  --max-steps 15 \
+  --stop-on-success

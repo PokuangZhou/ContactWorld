@@ -1,0 +1,16 @@
+python train.py \
+  --data-root data/demo_data/exploration_search \
+  --task exploration_search \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_rgb_right \
+  --tactile-in-channels 3 \
+  --tactile-height 80 \
+  --tactile-width 60 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --batch-size 64 \
+  --epochs 1000

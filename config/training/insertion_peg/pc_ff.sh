@@ -1,0 +1,17 @@
+python train.py \
+  --data-root data/demo_data/insertion_peg \
+  --task insertion_peg \
+  --vision-key pointcloud \
+  --vision-type pc \
+  --pc-in-channels 6 \
+  --use-tactile \
+  --tactile-key tactile_force_field_right \
+  --tactile-in-channels 3 \
+  --tactile-height 10 \
+  --tactile-width 14 \
+  --tactile-dim 64 \
+  --fusion-type concat \
+  --reg-loss-type vc \
+  --reg-on-vision-only \
+  --batch-size 64 \
+  --epochs 560
