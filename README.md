@@ -47,7 +47,7 @@ Across 12 tasks and 6 sensing modalities, ContactWorld reveals that representati
 ## Easy Setup
 
 Please read the patch helper's README first. The script will clone the required third-party repositories and download the necessary data after you confirm to proceed. Then, you can directly run the installation command.
-Details can refer to [patch helper](scripts/manifeel_codepatch/readme.md).
+Details can refer to the note in the end.
 
 This installation requires [mamba](https://mamba.readthedocs.io/en/latest/installation/mamba-installation.html). Please make sure mamba is installed before running the script.
 
@@ -59,7 +59,7 @@ bash install_cw.sh
 ## Demo Data and Checkpoint Download Link
 💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main)
 
-how to use those data please refer to [data helper](extract_dataset_ckpts_addto_README.md) 
+how to use those data please refer to [data readme](extract_dataset_ckpts_addto_README.md) 
 
 ## Repository Layout
 
@@ -135,6 +135,7 @@ For a first check with downloaded USB data and a pretrained checkpoint, use
 ContactWorld/eval_planner_dy.py is for dynamic-horizon, and current default is fixed
 ContactWorld/eval_planner_sorting.py is for sorting task (for addiiton case id needed)
 
+Install details please refer to [patch readme](scripts/manifeel_codepatch/readme.md).
 
 ## Citation
 If you find our work useful, please consider citing our paper. <img src="media/cat_thumbup.gif" alt="Cat thumbs up" width="42" />

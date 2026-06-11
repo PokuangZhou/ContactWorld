@@ -1,4 +1,5 @@
 # Local data and pretrained checkpoints
+data/pretrained_model/
 data/pretrained_model/*
 !data/pretrained_model/.gitkeep
 !data/pretrained_model/dino3/
@@ -23,6 +24,10 @@ outputs/
 # Transformer world model experiments
 config/tf/
 world_model_tf/
+scripts/eval/tf/
+scripts/trian/
+scripts/eval_planner_tf_test.sh
+scripts/train_tf_test.sh
 
 # Large/generated example planning configs
 config/example/wm_bash/planning/exploration_search/

@@ -13,17 +13,13 @@ MANIFEEL_ROOT="${THIRDPARTY_ROOT}/manifeel"
 MANIFEEL_ISAACGYM_ROOT="${THIRDPARTY_ROOT}/manifeel-isaacgymenvs"
 ISAACGYM_TAR="${THIRDPARTY_ROOT}/IsaacGym_Preview_TacSL_Package.tar.gz"
 ISAACGYM_DIR="${THIRDPARTY_ROOT}/IsaacGym_Preview_TacSL_Package"
-DINO3_DIR="${REPO_ROOT}/data/pretrained_model/dino3"
-DINO3_CKPT="${DINO3_DIR}/dinov3_vitb16_pretrain_lvd1689m-73cec8be.pth"
 INDUSTREAL_TAR="${REPLACE_PART_ROOT}/industreal.tar"
 INDUSTREAL_DST="${MANIFEEL_ISAACGYM_ROOT}/assets/industreal"
 
 MANIFEEL_REPO_URL="${MANIFEEL_REPO_URL:-https://github.com/purdue-mars/manifeel.git}"
 ISAACGYM_GDRIVE_URL="${ISAACGYM_GDRIVE_URL:-https://drive.google.com/file/d/13dFRF9EXpzIWaJF2Z6f7BsuPUGQkPE8v/view?usp=sharing}"
-DINO3_GDRIVE_URL="${DINO3_GDRIVE_URL:-https://drive.google.com/file/d/1m_WYeLRM50KT6M2MfTUtJro2px5e0Rmt/view?usp=sharing}"
 INDUSTREAL_URL="${INDUSTREAL_URL:-https://huggingface.co/datasets/Pokuang/ContactWorld/resolve/main/assets/industreal.tar}"
 SKIP_ISAACGYM_DOWNLOAD="${SKIP_ISAACGYM_DOWNLOAD:-false}"
-SKIP_DINO3_DOWNLOAD="${SKIP_DINO3_DOWNLOAD:-false}"
 SKIP_INDUSTREAL_ASSETS="${SKIP_INDUSTREAL_ASSETS:-false}"
 SKIP_MANIFEEL_INSTALL="${SKIP_MANIFEEL_INSTALL:-false}"
 SKIP_REPLACE_CODE="${SKIP_REPLACE_CODE:-false}"
@@ -130,6 +126,20 @@ replace_industreal_assets() {
     echo "Copied ${INDUSTREAL_SRC} -> ${INDUSTREAL_DST}"
 }
 
+detect_conda_base() {
+    local candidate=""
+
+    if command -v conda >/dev/null 2>&1; then
+        candidate="$(conda info --base 2>/dev/null || true)"
+    fi
+
+    if [ -z "${candidate}" ] && command -v mamba >/dev/null 2>&1; then
+        candidate="$(dirname "$(dirname "$(command -v mamba)")")"
+    fi
+
+    echo "${candidate}"
+}
+
 get_contactworld_env_path() {
     if [ -n "${CONDA_ENV_PATH:-}" ]; then
         echo "${CONDA_ENV_PATH}"
@@ -141,13 +151,10 @@ get_contactworld_env_path() {
         return
     fi
 
-    if command -v conda >/dev/null 2>&1; then
-        echo "$(conda info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')/envs/${CONDA_ENV_NAME}"
-        return
-    fi
-
-    if command -v mamba >/dev/null 2>&1; then
-        echo "$(mamba info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')/envs/${CONDA_ENV_NAME}"
+    local conda_base
+    conda_base="$(detect_conda_base)"
+    if [ -n "${conda_base}" ]; then
+        echo "${conda_base}/envs/${CONDA_ENV_NAME}"
         return
     fi
 
@@ -198,20 +205,7 @@ fi
 echo ""
 
 echo "=========================================="
-echo "4. Download DINOv3 Checkpoint"
-echo "=========================================="
-if [ "${SKIP_DINO3_DOWNLOAD}" = "true" ]; then
-    echo "Skipping DINOv3 download because SKIP_DINO3_DOWNLOAD=true"
-elif [ -f "${DINO3_CKPT}" ]; then
-    echo "DINOv3 checkpoint already exists: ${DINO3_CKPT}"
-else
-    mkdir -p "${DINO3_DIR}"
-    download_with_gdown "${DINO3_GDRIVE_URL}" "${DINO3_CKPT}"
-fi
-echo ""
-
-echo "=========================================="
-echo "5. Install ManiFeel"
+echo "4. Install ManiFeel"
 echo "=========================================="
 if [ "${SKIP_MANIFEEL_INSTALL}" = "true" ]; then
     echo "Skipping ManiFeel install because SKIP_MANIFEEL_INSTALL=true"
@@ -222,7 +216,7 @@ fi
 echo ""
 
 echo "=========================================="
-echo "6. Download and Replace IndustReal Assets"
+echo "5. Download and Replace IndustReal Assets"
 echo "=========================================="
 if [ "${SKIP_INDUSTREAL_ASSETS}" = "true" ]; then
     echo "Skipping IndustReal assets because SKIP_INDUSTREAL_ASSETS=true"
@@ -240,7 +234,7 @@ fi
 echo ""
 
 echo "=========================================="
-echo "7. Apply ContactWorld Code Patch"
+echo "6. Apply ContactWorld Code Patch"
 echo "=========================================="
 if [ "${SKIP_REPLACE_CODE}" = "true" ]; then
     echo "Skipping replace_code.sh because SKIP_REPLACE_CODE=true"

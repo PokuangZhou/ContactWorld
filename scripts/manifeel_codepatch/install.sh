@@ -9,7 +9,6 @@ CONTACTWORLD_NONINTERACTIVE="${CONTACTWORLD_NONINTERACTIVE:-true}"
 CONDA_ENV_NAME="${CONDA_ENV_NAME:-contactworld}"
 PYTHON_VERSION="${PYTHON_VERSION:-3.8}"
 MANIFEEL_ISAACGYM_REPO_URL="${MANIFEEL_ISAACGYM_REPO_URL:-https://github.com/purdue-mars/manifeel-isaacgymenvs.git}"
-DIFFUSION_POLICY_REPO_URL="${DIFFUSION_POLICY_REPO_URL:-https://github.com/real-stanford/diffusion_policy.git}"
 
 echo "=========================================="
 echo "ManiFeel Installation Script"
@@ -30,6 +29,20 @@ download_file() {
         echo "ERROR: neither wget nor curl was found; cannot download ${url}" >&2
         exit 1
     fi
+}
+
+detect_conda_base() {
+    local candidate=""
+
+    if command -v conda >/dev/null 2>&1; then
+        candidate="$(conda info --base 2>/dev/null || true)"
+    fi
+
+    if [ -z "${candidate}" ] && [ -n "${CONDA_EXE:-}" ]; then
+        candidate="$(dirname "$(dirname "${CONDA_EXE}")")"
+    fi
+
+    echo "${candidate}"
 }
 
 ensure_conda() {
@@ -59,7 +72,7 @@ ensure_conda() {
         CONDA_EXE="${miniforge_home}/bin/conda"
     fi
 
-    CONDA_BASE="$("${CONDA_EXE}" info --base 2>/dev/null | tail -n 1 | awk '{print $NF}')"
+    CONDA_BASE="$(detect_conda_base)"
     if [ -z "${CONDA_BASE}" ] || [ ! -f "${CONDA_BASE}/etc/profile.d/conda.sh" ]; then
         echo "ERROR: could not find conda initialization script under ${CONDA_BASE}" >&2
         exit 1
@@ -169,9 +182,6 @@ else
     clone_or_reuse_repo "${MANIFEEL_ISAACGYM_REPO_URL}" "${PARENT_DIR}/manifeel-isaacgymenvs"
     pip_install_editable "${PARENT_DIR}/manifeel-isaacgymenvs" "manifeel-isaacgymenvs"
 fi
-
-clone_or_reuse_repo "${DIFFUSION_POLICY_REPO_URL}" "${PARENT_DIR}/diffusion_policy"
-pip_install_editable "${PARENT_DIR}/diffusion_policy" "diffusion_policy"
 
 echo ""
 echo "=========================================="
