@@ -59,7 +59,7 @@ bash install_cw.sh
 ## Demo Data and Checkpoint Download Link
 💾 [huggingface link](https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main)
 
-how to use those data please refer to [data readme](extract_dataset_ckpts_addto_README.md) 
+how to use those data please refer to [data README](extract_dataset_ckpts_addto_README.md). 
 
 ## Repository Layout
 
@@ -67,14 +67,12 @@ how to use those data please refer to [data readme](extract_dataset_ckpts_addto_
 ContactWorld/
   config/                 # Training and evaluation YAML configs
   data/
-    demo_data/            # Demo zarr datasets
-    pretrained_model/     # Local pretrained checkpoints, e.g. DINOv3
+    demo_data/            # Demo zarr datasets    
     replace_part/         # Patch files applied to thirdparty ManiFeel repos
   media/                  # GIF used in README
   scripts/
-    manifeel_codepatch/   # Install, data download, and thirdparty patch scripts
-    train_tf_test.sh      # Minimal training/sanity test
-    eval_planner_tf_test.sh # planner
+    manifeel_codepatch/   # Install, data download, and thirdparty patch scripts   
+    
 ```
 
 ## Quick Tests
@@ -135,7 +133,7 @@ For a first check with downloaded USB data and a pretrained checkpoint, use
 ContactWorld/eval_planner_dy.py is for dynamic-horizon, and current default is fixed
 ContactWorld/eval_planner_sorting.py is for sorting task (for addiiton case id needed)
 
-Install details please refer to [patch readme](scripts/manifeel_codepatch/readme.md).
+Install details please refer to [patch helper's README](scripts/manifeel_codepatch/readme.md).
 
 ## Citation
 If you find our work useful, please consider citing our paper. <img src="media/cat_thumbup.gif" alt="Cat thumbs up" width="42" />
