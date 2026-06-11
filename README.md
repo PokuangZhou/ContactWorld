@@ -4,8 +4,8 @@
 <h2> ContactWorld: <br>
 What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 
-<a href="https://github.com/PokuangZhou/ContactWorld"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
-<a href="https://github.com/PokuangZhou/ContactWorld"><img src="https://img.shields.io/badge/Paper-Link-red" alt="Paper Link"></a>
+<a href="https://contact-world.github.io/"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
+<a href="https://drive.google.com/file/d/15ToTrPhCByiSU59WxpiK-_ueZB6LVd8c/view"><img src="https://img.shields.io/badge/Paper-Link-red" alt="Paper Link"></a>
 <a href="https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow" alt="Dataset"></a>
 
 </div>
@@ -15,24 +15,33 @@ What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 <a href="https://pokuangzhou.github.io/website/">Pokuang Zhou</a>*,
 <a href="https://aaronzkd.github.io/KaidiZhang.web/">Kaidi Zhang</a>,
 <a href="https://scholar.google.com/citations?user=A880yg0AAAAJ&hl=en&oi=ao">Adeesh Desai</a>,
-<a href="https://scholar.google.com/citations?user=Lloa6s4AAAAJ&hl=en&oi=ao">Temitope Amosa</a>, et al.<br>
-* Equal contribution. Supervisor: <a href="https://www.purduemars.com/people">Yu She</a>.
+<a href="https://scholar.google.com/citations?user=Lloa6s4AAAAJ&hl=en&oi=ao">Temitope Amosa</a>,
+<br>
+<a href="https://scholar.google.com/citations?user=Rmadq64AAAAJ&hl=en">Davood Soleymanzadeh</a>,
+<a href="https://scholar.google.com/citations?user=X52xke0AAAAJ&hl=en">Jiuzhou Lei</a>,
+<a href="https://zh.engr.tamu.edu/">Minghui Zheng</a>,
+<a href="https://www.purduemars.com/">Yu She<sup>†</sup></a>
+<br>
+* Equal Contribution &nbsp; † Corresponding Author
 </p>
 
-<p style="width: 90%; margin: 0 auto; text-align: justify;">
-<strong>ContactWorld</strong> systematically studies vision-tactile world models across 12 contact-rich manipulation tasks and shows that spatially structured, temporally continuous representations are crucial for stable long-horizon planning. Experiments further demonstrate that point-cloud observations and compatible tactile force-field representations substantially improve planning success, highlighting the importance of representation structure, multimodal compatibility, and tactile sensing under long-horizon contact uncertainty.
+<p style="width: 80%; margin: 0 auto; text-align: justify;">
+<strong>ContactWorld</strong> is a benchmark for studying visual-tactile world models in contact-rich manipulation.
+Across 12 tasks and 6 sensing modalities, ContactWorld reveals that representation structure, cross-modal compatibility, and long-horizon robustness are critical for reliable planning.
 </p>
 
 <p align="center">
-<img src="media/cw_teaser.gif" alt="ContactWorld teaser" width="90%" />
+<img src="media/cw_teaser.gif" alt="ContactWorld teaser" width="80%" />
 </p>
 
 ## Highlights
-
 - A JEPA-structured vision-tactile world model with a CEM-style planner.
-- We identify three key properties: spatial structure, temporal continuity, and cross-modal compatibility.
-- Easy-to-install, reproducible, and lightweight simulation environments based on Isaac Gym.
-- Open-source demonstration data, trained checkpoints, and evaluation tools for convenient reproduction.
+- We reveal three key findings for contact-rich world modeling:
+  - Representation structure matters.
+  - Tactile benefits depend on cross-modal compatibility.
+  - Tactile sensing becomes increasingly important at longer planning horizons.
+- Easy-to-install and lightweight Isaac Gym environments covering 12 contact-rich manipulation tasks and 6 sensing modalities.
+- Open-source datasets, pretrained checkpoints, and evaluation tools for reproducible research.
 
 
 ## Easy Setup
