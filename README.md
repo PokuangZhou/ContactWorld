@@ -236,7 +236,7 @@ If you find our work useful, please consider citing our paper. <img src="media/c
 @article{zhang2026contactworld,
   title={ContactWorld: What Matters in Vision-Tactile World Models for Contact-Rich Manipulation},
   author={Zhang, Zhiyuan and Zhou, Pokuang and Zhang, Kaidi and Desai, Adeesh and Amosa, Temitope and Soleymanzadeh, Davood and Lei, Jiuzhou and Zheng, Minghui and She, Yu},
-  journal={arXiv preprint},
+  journal={arXiv preprint arXiv:2606.13877},
   year={2026}
 }
 ```
