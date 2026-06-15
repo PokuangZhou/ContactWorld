@@ -5,7 +5,7 @@
 What Matters in Vision-Tactile World Models for Contact-Rich Manipulation</h2>
 
 <a href="https://contact-world.github.io/"><img src="https://img.shields.io/badge/Project-Page-blue" alt="Project Page"></a>
-<a href="https://drive.google.com/file/d/15ToTrPhCByiSU59WxpiK-_ueZB6LVd8c/view"><img src="https://img.shields.io/badge/Paper-Link-red" alt="Paper Link"></a>
+<a href="https://arxiv.org/abs/2606.13877"><img src="https://img.shields.io/badge/Paper-Link-red" alt="Paper Link"></a>
 <a href="https://huggingface.co/datasets/Pokuang/ContactWorld/tree/main"><img src="https://img.shields.io/badge/Dataset-HuggingFace-yellow" alt="Dataset"></a>
 
 </div>
